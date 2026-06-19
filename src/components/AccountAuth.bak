@@ -1,0 +1,147 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Mail, Phone, Lock, User, Eye, EyeOff } from 'lucide-react'; // Import icons from lucide-react
+
+interface AccountAuthProps {
+  onAuthSuccess: (isLoggedIn: boolean) => void;
+  onBack: () => void;
+}
+
+export default function AccountAuth({ onAuthSuccess, onBack }: AccountAuthProps) {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate API call
+    console.log(isSignUp ? 'Signing Up' : 'Signing In', { userName, email, phoneNumber, password });
+    alert(isSignUp ? 'Registration Successful!' : 'Login Successful!');
+    onAuthSuccess(true); // Simulate successful login/registration
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-yellow-50 pb-20 relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-300 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-40 right-10 w-96 h-96 bg-yellow-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      <div className="relative max-w-md mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-center p-10 bg-white/70 backdrop-blur-2xl border-b-2 border-white/60 shadow-xl">
+          <h1 className="text-xl sm:text-2xl font-black text-sky-900 text-center drop-shadow-sm whitespace-nowrap tracking-tight">
+            <span className="text-blue-700">
+              {isSignUp ? 'Sign Up' : 'Sign In'}
+            </span>
+          </h1>
+        </div>
+
+        {/* Form Section */}
+        <form onSubmit={handleSubmit} className="p-4 space-y-6">
+          {isSignUp && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* User Name */}
+              <div className="relative group">
+                <User className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 transition-colors z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-3xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                <input
+                  type="text"
+                  placeholder="Enter User Name"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="relative w-full pl-14 pr-5 py-5 bg-white/70 backdrop-blur-2xl border-2 border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-xl font-bold text-sky-800 placeholder:text-sky-500 placeholder:font-medium transition-all"
+                  required
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div className="relative group">
+                <Phone className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 transition-colors z-10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-3xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                <input
+                  type="tel"
+                  placeholder="Enter Phone Number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="relative w-full pl-14 pr-5 py-5 bg-white/70 backdrop-blur-2xl border-2 border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-xl font-bold text-sky-800 placeholder:text-sky-500 placeholder:font-medium transition-all"
+                  required
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Email */}
+          <div className="relative group">
+            <Mail className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 transition-colors z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-3xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <input
+              type="email"
+              placeholder="Enter Gmail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="relative w-full pl-14 pr-5 py-5 bg-white/70 backdrop-blur-2xl border-2 border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-xl font-bold text-sky-800 placeholder:text-sky-500 placeholder:font-medium transition-all"
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="relative group">
+            <Lock className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 transition-colors z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-3xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Enter Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="relative w-full pl-14 pr-16 py-5 bg-white/70 backdrop-blur-2xl border-2 border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-xl font-bold text-sky-800 placeholder:text-sky-500 placeholder:font-medium transition-all"
+              required
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute right-5 top-1/2 transform -translate-y-1/2 p-1 text-sky-500 hover:text-blue-600 transition-colors z-10"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full py-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-lg rounded-3xl shadow-xl hover:from-blue-600 hover:to-indigo-700 transition-all transform hover:scale-[1.01]"
+          >
+            {isSignUp ? 'SIGN UP' : 'SIGN IN'}
+          </button>
+        </form>
+
+        {/* Toggle Sign In/Sign Up */}
+        <div className="p-4 text-center">
+          <p className="text-gray-600">
+            {isSignUp ? 'Already have an account?' : 'Don't have an account?'}
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="ml-2 font-bold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
