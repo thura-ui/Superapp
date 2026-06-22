@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_PRODUCTS_API_BASE_URL || 'http://168.144.129.220/api/v1';
+const API_BASE = import.meta.env.VITE_PRODUCTS_API_BASE_URL || 'https://staging.simless-mm.com/api/v1';
 const CART_API_BASE = `${API_BASE}/cart`;
 const CART_TOKEN_KEY = 'x-cart-token';
 
@@ -28,7 +28,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     await bootstrapGuestToken();
     cartToken = getCartToken();
   }
-  
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -72,10 +72,108 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
 };
 
 export const getCart = () => request('');
-export const addToCart = (variation_id: number, quantity: number) => 
+export const addToCart = (variation_id: number, quantity: number) =>
   request('/add', { method: 'POST', body: JSON.stringify({ variation_id, quantity }) });
-export const updateCartItem = (item_id: number, quantity: number) => 
+export const updateCartItem = (item_id: number, quantity: number) =>
   request(`/items/${item_id}`, { method: 'PUT', body: JSON.stringify({ quantity }) });
-export const removeCartItem = (item_id: number) => 
+export const removeCartItem = (item_id: number) =>
   request(`/items/${item_id}`, { method: 'DELETE' });
 export const clearCart = () => request('/clear', { method: 'POST' });
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  code: string;
+  logo_url?: string;
+}
+
+export interface CheckoutItem {
+  variation_id: number;
+  quantity: number;
+}
+
+export interface CheckoutPayload {
+  items: CheckoutItem[];
+  payment_method: string;
+  customer_phone: string;
+  order_note?: string;
+}
+
+export interface CheckoutPaymentResult {
+  success: boolean;
+  reference?: string;
+  qr_data?: string | null;
+  deeplink?: string | null;
+}
+
+export interface CheckoutResponse {
+  payment?: CheckoutPaymentResult;
+  [key: string]: unknown;
+}
+
+export const fetchPaymentMethods = async (): Promise<PaymentMethod[]> => {
+  const authToken = localStorage.getItem('authToken');
+  const cartToken = getCartToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  } else if (cartToken) {
+    headers['X-Cart-Token'] = cartToken;
+  }
+
+  const response = await fetch(`${API_BASE}/payment-methods`, { headers });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch payment methods: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const rows: unknown[] = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.data)
+    ? data.data
+    : Array.isArray(data?.payment_methods)
+    ? data.payment_methods
+    : [];
+
+  return rows.map((r: any) => ({
+    id: String(r.id ?? r.code ?? r.slug ?? ''),
+    name: String(r.name ?? r.label ?? r.title ?? r.id ?? ''),
+    code: String(r.code ?? r.slug ?? r.id ?? ''),
+    logo_url: r.logo_url ?? r.logo ?? r.icon_url ?? undefined,
+  }));
+};
+
+export const submitCheckout = async (payload: CheckoutPayload): Promise<CheckoutResponse> => {
+  const authToken = localStorage.getItem('authToken');
+  const cartToken = getCartToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  } else if (cartToken) {
+    headers['X-Cart-Token'] = cartToken;
+  }
+
+  const response = await fetch(`${API_BASE}/checkout`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const err = await response.json();
+      detail = err?.message ?? err?.error ?? detail;
+    } catch { /* ignore */ }
+    throw new Error(`Checkout failed: ${detail}`);
+  }
+
+  return response.json();
+};
+
