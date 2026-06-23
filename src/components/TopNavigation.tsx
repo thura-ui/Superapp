@@ -1,4 +1,5 @@
 import { User, ShoppingCart } from 'lucide-react';
+import simlessLogo from '../public/s_i_m_l_e_s_s-removebg copy copy.png';
 
 interface TopNavigationProps {
   activeTab: string;
@@ -35,7 +36,7 @@ export default function TopNavigation({
           {/* Logo */}
           <button onClick={onHomeClick} className="flex items-center gap-2 shrink-0">
             <img
-              src="/s_i_m_l_e_s_s-removebg copy copy.png"
+              src={simlessLogo}
               alt="SIMLESS Logo"
               className="w-10 h-10 object-contain"
             />

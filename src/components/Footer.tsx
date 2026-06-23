@@ -1,3 +1,5 @@
+import simlessLogo from '../public/s_i_m_l_e_s_s-removebg copy copy.png';
+
 export default function Footer() {
   return (
     <footer className="bg-[#021a19] border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8">
@@ -6,7 +8,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <img
-                src="/s_i_m_l_e_s_s-removebg copy copy.png"
+                src={simlessLogo}
                 alt="SIMLESS Logo"
                 className="w-9 h-9 object-contain"
               />

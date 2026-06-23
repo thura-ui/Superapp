@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import simlessLogo from '../public/s_i_m_l_e_s_s-removebg copy copy.png';
 
 export default function LoadingPage() {
   return (
@@ -28,7 +29,7 @@ export default function LoadingPage() {
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
             
             <img
-              src="/s_i_m_l_e_s_s-removebg.png"
+              src={simlessLogo}
               alt="Simless Logo"
               className="w-44 h-44 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
             />
