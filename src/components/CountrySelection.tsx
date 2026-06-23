@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Star, Globe, ShoppingCart } from 'lucide-react';
+import { Search, Star, Globe } from 'lucide-react';
 import { fetchProducts } from '../lib/productsApi';
 import { addToCart } from '../lib/cartApi';
 import type { Country, Screen } from '../types';
@@ -278,7 +278,6 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                       disabled={addingToCart === item.id}
                       className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                     >
-                      <ShoppingCart className="w-3.5 h-3.5" />
                       {addingToCart === item.id ? '...' : 'Coverage & Network'}
                     </button>
                   </div>
@@ -325,7 +324,6 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                         onClick={() => onSelectRegion(region.id, region.name)}
                         className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1"
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
                         Coverage & Network
                       </button>
                     </div>
@@ -373,7 +371,6 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                         onClick={() => onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', type: 'global', popular: false })}
                         className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1"
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
                         Coverage & Network
                       </button>
                     </div>
