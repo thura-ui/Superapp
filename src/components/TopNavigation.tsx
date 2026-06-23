@@ -1,4 +1,4 @@
-import { Globe, User, ShoppingCart } from 'lucide-react';
+import { User, ShoppingCart } from 'lucide-react';
 
 interface TopNavigationProps {
   activeTab: string;
@@ -34,11 +34,14 @@ export default function TopNavigation({
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <button onClick={onHomeClick} className="flex items-center gap-2 shrink-0">
-            <div className="w-9 h-9 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Globe className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-black text-white tracking-tight hidden sm:block">
-              eSim<span className="text-cyan-400">Connect</span>
+            <img
+              src="/s_i_m_l_e_s_s-removebg copy copy.png"
+              alt="SIMLESS Logo"
+              className="w-10 h-10 object-contain"
+            />
+            <span className="text-lg font-black tracking-tight hidden sm:block">
+              <span className="text-[#1a8cff]">SIMLESS</span>{' '}
+              <span className="text-[#f5a623]">Your Travel eSIM</span>
             </span>
           </button>
 

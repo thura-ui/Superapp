@@ -271,7 +271,7 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                       onClick={() => onSelectCountry({ id: item.id, name: item.name, code: item.code, flagUrl: item.flagUrl, type: 'local', popular: item.popular })}
                       className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-xl text-xs shadow-md hover:shadow-teal-500/30 transition-all"
                     >
-                      Buy Now
+                      View Plans
                     </button>
                     <button
                       onClick={() => handleAddToCart(item)}
@@ -279,7 +279,7 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                       className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
-                      {addingToCart === item.id ? '...' : 'Add to Cart'}
+                      {addingToCart === item.id ? '...' : 'Coverage & Network'}
                     </button>
                   </div>
                 </div>
@@ -319,14 +319,14 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                         onClick={() => onSelectRegion(region.id, region.name)}
                         className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-xl text-xs shadow-md"
                       >
-                        Buy Now
+                        View Plans
                       </button>
                       <button
                         onClick={() => onSelectRegion(region.id, region.name)}
                         className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        Add to Cart
+                        Coverage & Network
                       </button>
                     </div>
                   </div>
@@ -367,14 +367,14 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, onSc
                         onClick={() => onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', type: 'global', popular: false })}
                         className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-xl text-xs shadow-md"
                       >
-                        Buy Now
+                        View Plans
                       </button>
                       <button
                         onClick={() => onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', type: 'global', popular: false })}
                         className="py-2.5 bg-white/5 border border-white/15 text-white/80 font-bold rounded-xl text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        Add to Cart
+                        Coverage & Network
                       </button>
                     </div>
                   </div>

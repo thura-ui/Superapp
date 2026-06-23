@@ -1,5 +1,3 @@
-import { Globe } from 'lucide-react';
-
 export default function Footer() {
   return (
     <footer className="bg-[#021a19] border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8">
@@ -7,10 +5,14 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Globe className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-black text-white">eSim Connect</span>
+              <img
+                src="/s_i_m_l_e_s_s-removebg copy copy.png"
+                alt="SIMLESS Logo"
+                className="w-9 h-9 object-contain"
+              />
+              <span className="text-lg font-black">
+                <span className="text-[#1a8cff]">SIMLESS</span>
+              </span>
             </div>
             <p className="text-white/50 text-sm">High Speed</p>
             <p className="text-white/50 text-sm">Reliable Support</p>
@@ -52,7 +54,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-white/10 text-center">
-          <p className="text-white/40 text-xs">2025 by Montserrat, Open Sans. eSim Connect.</p>
+          <p className="text-white/40 text-xs">&copy; 2026 by SIMLESS Development, simless-mm.com</p>
         </div>
       </div>
     </footer>

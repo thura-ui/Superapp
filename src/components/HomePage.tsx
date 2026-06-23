@@ -18,21 +18,22 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
 
   useEffect(() => {
     fetchProducts({ perPage: 220 }).then(products => {
-      const popular = products
-        .filter(p => {
-          const t = (p.type || '').toLowerCase();
-          return t === 'country' || t === 'local' || t === '';
-        })
-        .filter(p => p.is_popular || p.popular || p.featured)
-        .slice(0, 4)
-        .map(p => ({
-          id: p.slug,
-          name: p.name,
-          code: (p.regions[0]?.mcc || 'UN').replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2) || 'UN',
-          flagUrl: p.country_flag_url || p.flag_url,
-          type: 'local' as const,
-          popular: true,
-        }));
+      const countryProducts = products.filter(p => {
+        const t = (p.type || '').toLowerCase();
+        return t === 'country' || t === 'local' || t === '';
+      });
+
+      const marked = countryProducts.filter(p => p.is_popular || p.popular || p.featured);
+      const source = marked.length > 0 ? marked : countryProducts;
+
+      const popular = source.slice(0, 8).map(p => ({
+        id: p.slug,
+        name: p.name,
+        code: (p.regions[0]?.mcc || 'UN').replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2) || 'UN',
+        flagUrl: p.country_flag_url || p.flag_url,
+        type: 'local' as const,
+        popular: true,
+      }));
       setPopularPlans(popular);
     }).catch(() => {});
   }, []);
@@ -97,7 +98,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-black text-white text-center mb-10">Popular Data Plans</h2>
-          {popularPlans.length > 0 && (
+          {popularPlans.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {popularPlans.map(plan => (
                 <div
@@ -118,10 +119,14 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
                     onClick={() => onSelectCountry(plan)}
                     className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:shadow-teal-500/30 transition-all text-sm"
                   >
-                    Buy Now
+                    View Plans
                   </button>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-cyan-400 border-t-transparent" />
             </div>
           )}
         </div>
@@ -179,3 +184,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     </div>
   );
 }
+
+
+export default HomePage
