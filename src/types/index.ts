@@ -42,4 +42,4 @@ export interface DurationOption {
   label: string;
 }
 
-export type Screen = 'onboarding' | 'country-selection' | 'plan-details' | 'cart' | 'help-center' | 'esim-check' | 'no-esim-support' | 'esim-installation-guide' | 'esim-status' | 'apn-settings' | 'faq' | 'auth' | 'account-details' | 'my-data' | 'my-orders';
+export type Screen = 'onboarding' | 'home' | 'country-selection' | 'plan-details' | 'cart' | 'help-center' | 'esim-check' | 'no-esim-support' | 'esim-installation-guide' | 'esim-status' | 'apn-settings' | 'faq' | 'auth' | 'account-details' | 'my-data' | 'my-orders' | 'partner';

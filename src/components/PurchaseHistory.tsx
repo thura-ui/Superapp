@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Clock3, History, Globe, ChevronRight, CheckCircle2, AlertCircle, Signal } from 'lucide-react';
-import BottomNavigation from './BottomNavigation';
 
 interface PurchaseHistoryProps {
   onClose: () => void;
