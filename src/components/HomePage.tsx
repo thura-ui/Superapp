@@ -184,5 +184,3 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     </div>
   );
 }
-
-export default HomePage
