@@ -1,0 +1,341 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🌟 Local Fonts: Poppins Import (Mapped correctly by weight and style) */
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-ExtraLightItalic.ttf') format('truetype');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 🌟 ExtraBold (800) ကို ချိတ်ဆက်ခြင်း */
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 🌟 Black (900) ကို ချိတ်ဆက်ခြင်း */
+@font-face {
+  font-family: 'Poppins';
+  src: url('./fonts/Poppins/Poppins-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 🌟 Clean Global Base (Removed aggressive * !important which causes conflicts) */
+@layer base {
+  html, body, #root {
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    @apply text-3xl sm:text-4xl lg:text-[48px] font-bold leading-[1.15] text-slate-900;
+  }
+
+  h2 {
+    @apply text-2xl sm:text-3xl lg:text-[32px] font-semibold leading-[1.25] text-slate-900;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl lg:text-[22px] font-semibold leading-snug text-slate-900;
+  }
+
+  p, span, div, a, li {
+    @apply text-sm sm:text-base leading-relaxed text-slate-800;
+  }
+
+  button, input, select, textarea {
+    @apply font-medium text-xs sm:text-sm text-slate-900;
+  }
+}
+
+/* 🌟 Utilities and Components */
+@layer utilities {
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .plan-details-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+  }
+
+  .plan-details-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .plan-details-scroll::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 9999px;
+  }
+
+  .plan-details-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @keyframes testimonial-loop {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0%);
+    }
+  }
+
+  .testimonial-track {
+    display: flex;
+    gap: 1rem;
+    width: max-content;
+    animation: testimonial-loop 32s linear infinite;
+    will-change: transform;
+  }
+
+  .testimonial-track:hover {
+    animation-play-state: paused;
+  }
+
+  .testimonial-card {
+    transform: translateZ(0);
+  }
+}
+
+@layer components {
+  .layout-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================
+   Myanmar (my) Font Standardization
+   - Standardizes font-size & font-weight across web & mobile
+   - Fixes underline/cutoff issues from Myanmar stacking diacritics
+   - Prevents unwanted wrapping in nav, buttons, labels
+   - Font family is intentionally NOT changed
+   ========================================== */
+:lang(my),
+[lang="my"],
+[lang="my"] * {
+  text-decoration: none !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-weight: 500;
+}
+
+/* Headings: readable hierarchy, no clipping */
+:lang(my) h1,
+[lang="my"] h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+:lang(my) h2,
+[lang="my"] h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+:lang(my) h3,
+[lang="my"] h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Body text: consistent size */
+:lang(my) p,
+:lang(my) span,
+:lang(my) div,
+:lang(my) a,
+:lang(my) li,
+[lang="my"] p,
+[lang="my"] span,
+[lang="my"] div,
+[lang="my"] a,
+[lang="my"] li {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+/* Buttons & inputs: compact, single-line */
+:lang(my) button,
+:lang(my) input,
+:lang(my) select,
+:lang(my) textarea,
+[lang="my"] button,
+[lang="my"] input,
+[lang="my"] select,
+[lang="my"] textarea {
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* Nav links, labels, badges: force single line */
+:lang(my) nav span,
+:lang(my) nav a,
+:lang(my) nav button,
+[lang="my"] nav span,
+[lang="my"] nav a,
+[lang="my"] nav button {
+  white-space: nowrap !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* Mobile-specific: tighter line-height, smaller fonts to fit single-line */
+@media (max-width: 768px) {
+  :lang(my),
+  [lang="my"],
+  [lang="my"] * {
+    line-height: 1.6 !important;
+  }
+  :lang(my) h1,
+  [lang="my"] h1 {
+    font-size: 1.25rem;
+  }
+  :lang(my) h2,
+  [lang="my"] h2 {
+    font-size: 1.1rem;
+  }
+  :lang(my) h3,
+  [lang="my"] h3 {
+    font-size: 1rem;
+  }
+  :lang(my) p,
+  :lang(my) span,
+  :lang(my) div,
+  :lang(my) a,
+  :lang(my) li,
+  [lang="my"] p,
+  [lang="my"] span,
+  [lang="my"] div,
+  [lang="my"] a,
+  [lang="my"] li {
+    font-size: 0.82rem;
+  }
+  :lang(my) button,
+  :lang(my) input,
+  :lang(my) select,
+  :lang(my) textarea,
+  [lang="my"] button,
+  [lang="my"] input,
+  [lang="my"] select,
+  [lang="my"] textarea {
+    font-size: 0.75rem;
+  }
+  :lang(my) nav span,
+  :lang(my) nav a,
+  :lang(my) nav button,
+  [lang="my"] nav span,
+  [lang="my"] nav a,
+  [lang="my"] nav button {
+    font-size: 0.72rem;
+  }
+}

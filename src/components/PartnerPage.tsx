@@ -1,0 +1,298 @@
+import { useState } from 'react';
+import { Globe, DollarSign, BarChart3, Briefcase, Code, Plane, Users, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next'; // 🌟 i18next ကို import လုပ်ထားပါသည်
+
+const API_BASE = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
+
+export default function PartnerPage() {
+  // 🌟 Translation hook ကို ခေါ်ယူထားပါသည်
+  const { t } = useTranslation();
+
+  const [form, setForm] = useState({
+    partner_category: 'travel_agency',
+    partner_category_other: '',
+    org_name: '',
+    org_website: '',
+    primary_region: '',
+    full_name: '',
+    job_title: '',
+    work_email: '',
+    phone_number: '',
+    requirements: ''
+  });
+
+  const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setApiError(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/partnership/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          partner_category: form.partner_category,
+          partner_category_other: form.partner_category === 'Other' ? form.partner_category_other : null,
+          org_name: form.org_name,
+          org_website: form.org_website || null,
+          primary_region: form.primary_region || null,
+          full_name: form.full_name,
+          job_title: form.job_title || null,
+          work_email: form.work_email.trim().toLowerCase(),
+          phone_number: form.phone_number,
+          requirements: form.requirements || null
+        })
+      });
+
+      const resResult = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resResult.error || resResult.message || t('errValidation'));
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Partnership onboarding capture failed:', err);
+      setApiError(err.message || t('errSomethingWentWrong'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-slate-50/20 min-h-screen selection:bg-blue-500/10 font-['Poppins'] text-slate-900">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8 sm:mb-10">
+          {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 mb-1.5 tracking-tight font-['Poppins']">
+            {t('partnerHeaderTitle')}
+          </h1>
+          {/* 🌟 Font Size နှင့် Weight ကို ညှိထားပါသည် */}
+          <p className="text-slate-500 text-[13px] font-semibold uppercase tracking-wider font-['Poppins']">{t('partnerHeaderSubtitle')}</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Become a Partner */}
+            <div className="bg-white/70 backdrop-blur-xl border border-slate-100 rounded-3xl p-6 shadow-[0_18px_50px_rgba(15,23,42,0.02)]">
+              {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 tracking-tight font-['Poppins']">{t('becomePartnerTitle')}</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                  { icon: Plane, title: t('travelAgencies'), desc: t('travelAgenciesDesc') },
+                  { icon: Code, title: t('techPlatforms'), desc: t('techPlatformsDesc') },
+                  { icon: Briefcase, title: t('corporateTravel'), desc: t('corporateTravelDesc') },
+                  { icon: Users, title: t('contentCreators'), desc: t('contentCreatorsDesc') },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-slate-200 font-['Poppins']">
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100/60">
+                      <item.icon className="w-5 h-5 text-blue-600" />
+                    </div>
+                    {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+                    <p className="text-slate-900 font-semibold text-[13px] tracking-tight font-['Poppins']">{item.title}</p>
+                    <p className="text-slate-500 text-[11px] font-semibold leading-relaxed font-['Poppins']">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Key Partner Benefits */}
+            <div className="bg-white/70 backdrop-blur-xl border border-slate-100 rounded-3xl p-6 shadow-[0_18px_50px_rgba(15,23,42,0.02)]">
+              {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 tracking-tight font-['Poppins']">{t('partnerBenefitsTitle')}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: DollarSign, title: t('lucrativeCommissions'), desc: t('lucrativeCommissionsDesc') },
+                  { icon: Globe, title: t('globalReach'), desc: t('globalReachDesc') },
+                  { icon: BarChart3, title: t('realTimeDashboard'), desc: t('realTimeDashboardDesc') },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-slate-200 font-['Poppins']">
+                    <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100/60 shrink-0">
+                      <item.icon className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      {/* 🌟 Font Size ကို text-[13px] နှင့် Weight ကို font-semibold ပြောင်းထားပါသည် */}
+                      <p className="text-slate-900 font-semibold text-[13px] tracking-tight font-['Poppins']">{item.title}</p>
+                      <p className="text-slate-500 text-[11px] font-semibold mt-0.5 leading-relaxed font-['Poppins']">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* How It Works */}
+            <div className="bg-white/70 backdrop-blur-xl border border-slate-100 rounded-3xl p-6 shadow-[0_18px_50px_rgba(15,23,42,0.02)]">
+              {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 mb-4 tracking-tight font-['Poppins']">{t('howItWorksTitle')}</h2>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-2 font-['Poppins']">
+                {[
+                  { num: '1', title: t('registerProfile'), desc: t('registerProfileDesc') },
+                  { num: '2', title: t('getAccess'), desc: t('getAccessDesc') },
+                  { num: '3', title: t('startEarning'), desc: t('startEarningDesc') },
+                ].map((step, i) => (
+                  <div key={step.num} className="flex items-center gap-3">
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                        {/* 🌟 Font Weight ကို font-semibold သို့ ပြောင်းထားပါသည် */}
+                        <span className="text-white font-semibold text-base font-['Poppins']">{step.num}</span>
+                      </div>
+                      <p className="text-slate-900 font-semibold text-[13px] mt-1 font-['Poppins']">{step.title}</p>
+                      <p className="text-slate-500 text-[11px] font-semibold max-w-[140px] leading-relaxed font-['Poppins']">{step.desc}</p>
+                    </div>
+                    <span className="text-slate-300 text-lg hidden sm:block mx-4 font-semibold">{'>'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Contact Form */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-3xl p-6 md:p-7 border border-slate-100 sticky top-24 shadow-[0_20px_50px_rgba(15,23,42,0.03)] space-y-4 font-['Poppins']">
+              {/* 🌟 Font Size နှင့် Weight ညှိထားပါသည် */}
+              <h3 className="text-[15px] font-semibold text-slate-900 border-b border-slate-50 pb-2.5 font-['Poppins']">{t('getInTouch')}</h3>
+
+              {apiError && (
+                <div className="p-3 bg-rose-50 text-rose-600 text-[13px] font-semibold rounded-xl border border-rose-100 leading-normal text-center font-['Poppins']">
+                  {apiError}
+                </div>
+              )}
+
+              {submitted ? (
+                <div className="text-center py-10 space-y-3 font-['Poppins']">
+                  <div className="w-14 h-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                    <Globe className="w-6 h-6 text-blue-600" />
+                  </div>
+                  {/* 🌟 Font Size နှင့် Weight ညှိထားပါသည် */}
+                  <p className="text-slate-900 font-semibold text-sm tracking-tight font-['Poppins']">{t('inquiryReceived')}</p>
+                  <p className="text-slate-500 text-[13px] font-semibold px-4 leading-relaxed font-['Poppins']">
+                    {t('inquiryReceivedDesc')}
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-3.5 font-['Poppins']">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <input
+                      type="text"
+                      placeholder={t('phFullName')}
+                      value={form.full_name}
+                      onChange={e => setForm({ ...form, full_name: e.target.value })}
+                      required
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                    />
+                    <input
+                      type="text"
+                      placeholder={t('phJobTitle')}
+                      value={form.job_title}
+                      onChange={e => setForm({ ...form, job_title: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                    />
+                  </div>
+
+                  <input
+                    type="email"
+                    placeholder={t('phWorkEmail')}
+                    value={form.work_email}
+                    onChange={e => setForm({ ...form, work_email: e.target.value })}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder={t('phPhoneNumber')}
+                    value={form.phone_number}
+                    onChange={e => setForm({ ...form, phone_number: e.target.value })}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder={t('phOrgName')}
+                    value={form.org_name}
+                    onChange={e => setForm({ ...form, org_name: e.target.value })}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                  />
+
+                  <input
+                    type="url"
+                    placeholder={t('phOrgWebsite')}
+                    value={form.org_website}
+                    onChange={e => setForm({ ...form, org_website: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder={t('phPrimaryRegion')}
+                    value={form.primary_region}
+                    onChange={e => setForm({ ...form, primary_region: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors font-['Poppins']"
+                  />
+
+                  <div className="grid grid-cols-1 gap-2">
+                    <select
+                      value={form.partner_category}
+                      onChange={e => setForm({ ...form, partner_category: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors appearance-none cursor-pointer font-['Poppins']"
+                    >
+                      <option value="travel_agency">{t('optTravelAgency')}</option>
+                      <option value="tech_platform">{t('optTechPlatform')}</option>
+                      <option value="corporate">{t('optCorporate')}</option>
+                      <option value="creator">{t('optCreator')}</option>
+                      <option value="Other">{t('optOther')}</option>
+                    </select>
+
+                    {form.partner_category === 'Other' && (
+                      <input
+                        type="text"
+                        placeholder={t('phSpecifyCategory')}
+                        value={form.partner_category_other}
+                        onChange={e => setForm({ ...form, partner_category_other: e.target.value })}
+                        required
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors animate-in fade-in duration-150 font-['Poppins']"
+                      />
+                    )}
+                  </div>
+
+                  <textarea
+                    placeholder={t('phRequirements')}
+                    value={form.requirements}
+                    onChange={e => setForm({ ...form, requirements: e.target.value })}
+                    rows={2}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-semibold text-[13px] transition-colors resize-none font-['Poppins']"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[13px] uppercase tracking-wider rounded-xl shadow-md disabled:opacity-40 transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer font-['Poppins']"
+                  >
+                    {busy ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        {t('btnSubmitting')}
+                      </>
+                    ) : (
+                      t('btnSubmit')
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

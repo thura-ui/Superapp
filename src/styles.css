@@ -1,0 +1,189 @@
+/* Background Overlay */
+.custom-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6); /* ပိုပြီး premium ဖြစ်အောင် Slate/Dark tint သုံးထားပါတယ် */
+  backdrop-filter: blur(8px); /* ခေတ်မီအောင် နောက်ခံကို မှုန်ဝါးဝါးလေး လုပ်ပေးထားပါတယ် */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, backdrop-filter .25s ease;
+}
+
+/* Show Modal */
+.custom-alert-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Alert Card */
+.custom-alert-card {
+  width: 380px;
+  max-width: 90%;
+
+  /* 🌟 [PURE WHITE SOLID BASE CONNECTED]: နောက်ခံကို အဖြူရောင်စစ်စစ် ထားရှိပါသည် */
+  background: #ffffff;
+  
+  /* 🌟 [LOGO BLUE SOLID BORDER CONNECTED]: ဘောင်လိုင်းအား HomePage နှင့် ကွက်တိကျအောင် အပြာရောင် Solid ဘောင် ပြောင်းလဲထားပါသည် */
+  border: 1px solid #3b82f6; 
+  border-radius: 24px; /* ပိုပြီး ဝိုင်းဝိုင်းအိအိလေး ဖြစ်အောင် တိုးပေးထားပါတယ် */
+  padding: 30px;
+
+  text-align: center;
+
+  /* 🌟 [LOGO BLUE SHADOW GLOW CONNECTED]: အရိပ်အား ဝဘ်ဆိုက်စတိုင်သစ်အတိုင်း အပြာရောင် Glow အရိပ်ဖြစ်အောင် ချိန်ညှိထားပါသည် */
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.16), 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  transform: scale(.85);
+  transition: transform .25s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bounce effect လေး ပါအောင် ပြင်ထားပါတယ် */
+}
+
+.custom-alert-overlay.active .custom-alert-card {
+  transform: scale(1);
+}
+
+.alert-title {
+  margin: 0 0 10px;
+  color: #0f172a; /* ပိုနက်ပြီး ကြည့်ကောင်းတဲ့ အရောင် */
+  font-size: 20px;
+  font-weight: 800; /* စာသားကို ထင်သာမြင်သာရှိအောင် */
+}
+
+.alert-message {
+  margin-bottom: 25px;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.alert-btn-group {
+  display: flex;
+  gap: 12px;
+}
+
+.alert-btn {
+  flex: 1;
+  padding: 12px 20px; /* ပိုနှိပ်လို့ကောင်းအောင် ခလုတ်ကို မြှင့်ထားပါတယ် */
+  border: none;
+  border-radius: 14px; /* ခလုတ်ပုံစံကို ပိုဝိုင်းပေးထားပါတယ် */
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* 🌟 Primary Button - Logo ရဲ့ အပြာရောင် Gradient */
+.alert-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+}
+
+.alert-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+}
+
+.alert-btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* 🌟 Secondary / Cancel Button - အေးမြတဲ့ ဆေးရောင်အနု */
+.alert-btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.alert-btn-secondary:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+/* 🌟 Danger Button (တကယ်လို့ သုံးဖြစ်ရင်) - Logo အဝါရောင် သို့မဟုတ် အနီရောင် */
+.alert-btn-danger {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.alert-btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* ==========================================
+   SIMLESS Logo Styling (Navbar Size Fix)
+   ========================================== */
+.nav-logo {
+  height: 100px;      /* 🌟 ပုံထဲကလို မျှတလှပတဲ့ သတ်မှတ်ချက်အမြင့် */
+  width: auto;       /* အချိုးအစား မပျက်စေရန် Auto ထားရှိခြင်း */
+  display: block;
+  object-fit: contain;
+  transition: all 0.2s ease;
+  margin-left: 0;
+}
+
+/* Mobile Screen များတွင် Logo အနားသတ် ပိုမိုလှပစေရန် */
+@media (max-width: 768px) {
+  .nav-logo {
+    margin-left: -8px; 
+  }
+}
+
+/* ==========================================
+   Carousel Search Bar Position Fix (Dropdown-Free Version)
+   ========================================== */
+.carousel-search-container {
+  position: absolute;
+  /* 🌟 အစ်ကိုပြထားသော စာသားအောက် အနီကွက်နေရာသို့ ကွက်တိရောက်စေရန် */
+  top: 48%; 
+  left: 0;
+  width: 100%;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================
+   Carousel Search Bar & Dropdown Position Fix
+   ========================================== */
+.carousel-search-container {
+  position: absolute;
+  /* 🌟 အစ်ကိုပြထားသော စာသားအောက် အနီကွက်နေရာသို့ ကွက်တိရောက်စေရန် */
+  top: 50%; 
+  left: 0;
+  width: 100%;
+  z-index: 50; /* Dropdown ကော Search Bar ပါ အပေါ်စီးကပေါ်ရန် */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Screen Size အလိုက် စာသားအောက် ကပ်လျက်ရှိနေစေရန် Responsive ချိန်ညှိခြင်း */
+@media (max-width: 1024px) {
+  .carousel-search-container {
+    top: 50%;
+  }
+}
+
+@media (max-width: 640px) {
+  .carousel-search-container {
+    top: 49%;
+  }
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari */
+}
