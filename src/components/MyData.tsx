@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Globe, Binary, Calendar, HardDrive, RefreshCw, Cpu, Wifi, Radio, ArrowLeft, ArrowRight, Layers } from 'lucide-react';
-import { useTranslation } from 'react-i18next'; // 🌟 i18next ကို import လုပ်ထားပါသည်
+import { Globe, Calendar, HardDrive, RefreshCw, Cpu, Wifi, ArrowLeft, ArrowRight, Layers, Search, Lightbulb, SearchCode } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MyDataProps {
   onClose: () => void;
@@ -33,9 +33,23 @@ interface UserOrderCard {
   status: string;
 }
 
+// 🔴 Anti-Cache Helper Functions
+const appendAntiCacheParam = (url: string): string => {
+  const timestamp = new Date().getTime();
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
+  const headers = new Headers(existingHeaders);
+  headers.set('Content-Type', 'application/json');
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  return headers;
+};
+
 export default function MyData({ onHome }: MyDataProps) {
-  // 🌟 Translation hook ကို ခေါ်ယူထားပါသည်
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [iccidNumber, setIccidNumber] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,9 +61,39 @@ export default function MyData({ onHome }: MyDataProps) {
   const [isLoggedInUser, setIsLoggedInUser] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
-  // 🌟 Status များကို ဘာသာပြန်နိုင်ရန် key အဖြစ် သတ်မှတ်ထားပါသည်
+  // 🔴 Window Screen Width ကို ခြေရာခံမည့် State 🔴
+  const [screenWidth, setScreenWidth] = useState<number>(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setScreenWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const statuses = ['statusNotUsed', 'statusInUse', 'statusUsed', 'statusExpired'];
-  const radius = 75; 
+  
+  // 🔴 Dynamic Radius Logic (Mobile / Web View + Text Length ပေါ် မူတည်၍ တွက်ချက်ခြင်း) 🔴
+  const calculateDynamicRadius = () => {
+    let baseRadius = screenWidth < 640 ? 88 : 94;
+
+    if (fetchedData) {
+      const formattedDataStr = (Math.abs(fetchedData.remainingData) % 1 === 0 
+        ? Math.abs(fetchedData.remainingData) 
+        : Math.abs(fetchedData.remainingData).toFixed(2)).toString();
+
+      if (formattedDataStr.length > 5) {
+        baseRadius += 4;
+      } else if (formattedDataStr.length > 4) {
+        baseRadius += 2;
+      }
+    }
+
+    return baseRadius;
+  };
+
+  const radius = calculateDynamicRadius();
   const circumference = 2 * Math.PI * radius;
   const remainingPercent = fetchedData ? (fetchedData.remainingData / fetchedData.totalData) * 100 : 0;
   const strokeDashoffset = circumference - (remainingPercent / 100) * circumference;
@@ -97,8 +141,6 @@ export default function MyData({ onHome }: MyDataProps) {
     }
 
     if (defaultStatus === 'Cancelled') return 'statusCancelled';
-    
-    // API မှ status များကို translation key အဖြစ် ပြောင်းလဲပေးသည်
     if (defaultStatus === 'In Use') return 'statusInUse';
     if (defaultStatus === 'Not Used') return 'statusNotUsed';
     if (defaultStatus === 'Expired') return 'statusExpired';
@@ -159,7 +201,7 @@ export default function MyData({ onHome }: MyDataProps) {
 
     return {
       title: plan.sku_name?.trim() || "eSIM Data Plan",
-      status: finalStatusKey, // status ကို translation key အဖြစ် သိမ်းထားသည်
+      status: finalStatusKey,
       remainingData: remainingGb,
       usedData: Number(usage.total_used_gb) || 0,
       totalData: Number(plan.high_flow_size_gb) || 0,
@@ -184,12 +226,16 @@ export default function MyData({ onHome }: MyDataProps) {
       setError(null);
       try {
         const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
-        const response = await fetch(`${baseUrl}/esim/customer-check-status`, {
+        
+        // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+        const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/customer-check-status`);
+        const headers = getAntiCacheHeaders({
+          'Authorization': `Bearer ${token}`
+        });
+
+        const response = await fetch(fetchUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+          headers,
         });
 
         const resJson = await response.json();
@@ -242,14 +288,14 @@ export default function MyData({ onHome }: MyDataProps) {
         }
       } catch (err) {
         console.error(err);
-        setError(t('errorFetchCards'));
+        setError(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserOrders();
-  }, [t]); // 🌟 t ကို dependency array ထဲထည့်ပေးပါသည်
+  }, [t]);
 
   const handleCardBoxSelect = async (iccid: string) => {
     if (!iccid) return;
@@ -261,12 +307,15 @@ export default function MyData({ onHome }: MyDataProps) {
       const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch(`${baseUrl}/esim/customer-check-status`, {
+      // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+      const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/customer-check-status`);
+      const headers = getAntiCacheHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+
+      const response = await fetch(fetchUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers,
         body: JSON.stringify({ iccid: iccid })
       });
 
@@ -298,12 +347,15 @@ export default function MyData({ onHome }: MyDataProps) {
       const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch(`${baseUrl}/esim/check-status`, {
+      // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+      const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/check-status`);
+      const headers = getAntiCacheHeaders(
+        token ? { 'Authorization': `Bearer ${token}` } : {}
+      );
+
+      const response = await fetch(fetchUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
+        headers,
         body: JSON.stringify({ iccid: iccidNumber.trim() }),
       });
 
@@ -325,55 +377,125 @@ export default function MyData({ onHome }: MyDataProps) {
   };
 
   return (
-    <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto selection:bg-blue-500/10 font-['Poppins'] text-slate-900">
+    <div className="my-data-container pt-20 sm:pt-28 pb-8 sm:pb-12 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto selection:bg-blue-500/10 font-['Poppins'] text-slate-900">
       
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200/60 pb-5 mb-6 gap-4">
-        <div className="flex items-center gap-3">
-          {isLoggedInUser && viewMode === 'detail' && (
-            <button 
-              onClick={() => setViewMode('list')}
-              className="p-2 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm font-['Poppins']"
-              title="Back to Cards List"
-            >
-              <ArrowLeft className="w-4 h-4 text-slate-700" />
-            </button>
+      {/* Search & Banner Section */}
+      {(!isLoggedInUser || (isLoggedInUser && viewMode === 'list' && userCards.length === 0)) && !fetchedData && (
+        <div className="w-full max-w-5xl mx-auto space-y-6 font-['Poppins']">
+          
+          {isLoggedInUser && userCards.length === 0 && !loading && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl text-center text-xs sm:text-sm font-semibold shadow-xs">
+              {i18n.language === 'my' 
+                ? 'မည်သည့် Data မျှ ဝယ်ယူထားခြင်း မရှိသေးပါ။' 
+                : 'You have not purchased any data plans yet.'}
+            </div>
           )}
+
+          <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-4 sm:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4 sm:space-y-6">
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-left space-y-1">
+                <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 px-3 py-1 rounded-full text-[11px] font-semibold">
+                  <SearchCode className="w-3.5 h-3.5 text-blue-600" />
+                  FIND YOUR ICCID
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleIccidCheck} className="w-full">
+              <div className="flex flex-row items-center bg-white border-2 border-slate-200 focus-within:border-blue-600 rounded-2xl p-1 sm:p-1.5 shadow-xs transition-all w-full overflow-hidden">
+                
+                <div className="flex items-center flex-1 min-w-0">
+                  <div className="pl-2 pr-1 sm:pl-3 sm:pr-2 text-slate-400 shrink-0">
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+
+                  <input 
+                    type="text" 
+                    placeholder="Enter ICCID number (89...)" 
+                    value={iccidNumber}
+                    onChange={(e) => setIccidNumber(e.target.value)}
+                    className="hidden sm:block w-full px-1 py-2 sm:py-2.5 bg-transparent font-semibold text-slate-800 focus:outline-none text-sm placeholder:text-slate-400"
+                    required
+                  />
+
+                  <input 
+                    type="text" 
+                    placeholder="Enter ICCID number (89...)" 
+                    value={iccidNumber}
+                    onChange={(e) => setIccidNumber(e.target.value)}
+                    className="block sm:hidden w-full px-1 py-2 bg-transparent font-semibold text-slate-800 focus:outline-none text-[11px] placeholder:text-slate-400"
+                    required
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="px-3 sm:px-8 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shrink-0 shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-none disabled:opacity-50 whitespace-nowrap"
+                >
+                  {loading ? <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-white" /> : (
+                    <span className="text-white">{t('searchBtn', 'Check Status')}</span>
+                  )}
+                </button>
+                
+              </div>
+            </form>
+
+          </div>
+
+          <div className="w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-[0_12px_35px_rgba(0,0,0,0.04)] bg-[#f4f3f0]">
+            <img 
+              src="/ICCIDcheck-banner.jpg" 
+              alt="ICCID Check Banner" 
+              className="w-full h-auto object-cover block"
+            />
+          </div>
+
+          <div className="bg-white/90 border border-slate-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 font-bold">
+                <Lightbulb className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-bold text-slate-900">{i18n.language === 'my' ? 'ICCID ကို ဘယ်မှာ ရှာရမလဲ။' : 'Where can I find my ICCID?'}</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed mt-0.5">
+                  {i18n.language === 'my' ? 'ဝယ်ယူမှု အတည်ပြု အီးမေးလ် သို့မဟုတ် သင့်ဖုန်း၏ Settings > Cellular တွင် သွားရောက် ကြည့်ရှုနိုင်ပါသည်။' : 'Check your purchase confirmation email or go to Settings > Cellular on your device.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Logged in Details or Detail Mode Header */}
+      {isLoggedInUser && viewMode === 'detail' && (
+        <div className="flex items-center gap-3 border-b border-slate-200/60 pb-4 mb-6">
+          <button 
+            onClick={() => {
+              setViewMode('list');
+              setFetchedData(null);
+              setSelectedIccid('');
+            }}
+            className="p-2 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm cursor-pointer font-['Poppins']"
+            title="Back to Cards List"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-700" />
+          </button>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2 font-['Poppins']">
-              <Radio className="w-4 h-4 text-blue-600 animate-pulse" /> {t('checkDataUsage')}
+              {t('checkDataUsage')}
             </h1>
             <p className="text-slate-500 text-[11px] sm:text-[13px] mt-0.5 font-semibold font-['Poppins']">
-              {viewMode === 'list' && isLoggedInUser ? t('checkDataUsageDesc') : t('liveDataMatrix')}
+              {t('liveDataMatrix')}
             </p>
           </div>
         </div>
-        
-        {!isLoggedInUser && (
-          <form onSubmit={handleIccidCheck} className="flex gap-2 w-full md:w-auto max-w-md">
-            <div className="relative flex-1">
-              <Binary className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder={t('enterIccid')}
-                value={iccidNumber}
-                onChange={(e) => setIccidNumber(e.target.value)}
-                className="w-full md:w-64 pl-9 pr-3 py-2 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-all font-['Poppins']"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl tracking-wider transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 font-['Poppins'] cursor-pointer border-none"
-            >
-              {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : t('searchBtn')}
-            </button>
-          </form>
-        )}
-      </div>
+      )}
 
       {error && (
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-6 text-center text-sm font-semibold text-rose-600 font-['Poppins']">
+        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 my-6 text-center text-xs sm:text-sm font-semibold text-rose-600 font-['Poppins']">
           {error}
         </div>
       )}
@@ -384,7 +506,8 @@ export default function MyData({ onHome }: MyDataProps) {
         </div>
       )}
 
-      {!loading && isLoggedInUser && viewMode === 'list' && (
+      {/* Logged-In Customer's Purchased Profiles List */}
+      {!loading && isLoggedInUser && viewMode === 'list' && userCards.length > 0 && (
         <div className="space-y-4 animate-in fade-in duration-300">
           <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider px-1 flex items-center gap-1.5 font-['Poppins']">
             <Layers className="w-3.5 h-3.5 text-blue-600" /> {t('yourActivatedProfiles')} ({userCards.length})
@@ -441,11 +564,11 @@ export default function MyData({ onHome }: MyDataProps) {
                   <div className="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 md:w-80 text-center shrink-0 font-['Poppins']">
                     <div>
                       <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight block font-['Poppins']">{t('remaining')}</span>
-                      <span className="font-semibold text-blue-600 text-sm font-['Poppins']">{card.remainingData.toFixed(2)} GB</span>
+                      <span className="font-semibold text-blue-600 text-sm font-['Poppins']">{Math.abs(card.remainingData).toFixed(2)} GB</span>
                     </div>
                     <div className="border-x border-slate-200">
                       <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight block font-['Poppins']">{t('usedTotal')}</span>
-                      <span className="font-semibold text-slate-800 text-sm font-['Poppins']">{card.usedData.toFixed(2)} GB</span>
+                      <span className="font-semibold text-slate-800 text-sm font-['Poppins']">{Math.abs(card.usedData).toFixed(2)} GB</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight block font-['Poppins']">{t('expiryDate')}</span>
@@ -463,24 +586,25 @@ export default function MyData({ onHome }: MyDataProps) {
         </div>
       )}
 
+      {/* Selected Card Status Matrix Detail View */}
       {!loading && viewMode === 'detail' && fetchedData && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in slide-in-from-bottom-4 duration-300 font-['Poppins']">
           
-          <div className="lg:col-span-5 bg-slate-950 text-white rounded-[32px] p-6 shadow-xl relative overflow-hidden flex flex-col items-center text-center font-['Poppins']">
+          <div className="lg:col-span-5 bg-slate-950 text-white rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 shadow-xl relative overflow-hidden flex flex-col items-center text-center font-['Poppins']">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
             
-            <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 mb-6 font-['Poppins']">
+            <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 mb-4 sm:mb-6 font-['Poppins']">
               {t('quotaVisualization')}
             </span>
 
-            <div className="relative w-56 h-56 mb-6 flex items-center justify-center bg-white/[0.02] rounded-full">
+            <div className="relative w-56 h-56 sm:w-64 sm:h-64 mb-4 sm:mb-6 flex items-center justify-center bg-white/[0.02] rounded-full">
               <svg viewBox="0 0 200 200" className="w-full h-full transform -rotate-90">
                 <circle 
                   cx="100" 
                   cy="100" 
                   r={radius} 
-                  className="text-blue-500 transition-all duration-1000 filter drop-shadow-[0_0_6px_rgba(59,130,246,0.3)]" 
-                  strokeWidth="7" 
+                  className="text-blue-500 transition-all duration-700 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" 
+                  strokeWidth="8" 
                   stroke="currentColor" 
                   fill="transparent"
                   strokeDasharray={circumference}
@@ -489,28 +613,54 @@ export default function MyData({ onHome }: MyDataProps) {
                 />
               </svg>
               
-              <div className="absolute inset-0 flex flex-col items-center justify-center -mt-3">
-                <span className="text-4xl font-semibold text-white tracking-tight leading-none font-['Poppins']">
-                  {fetchedData.remainingData.toFixed(2)}
-                </span>
-                <span className="text-[11px] font-semibold text-slate-400 tracking-[0.12em] uppercase mt-2.5 block text-center font-['Poppins']">
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="flex items-baseline justify-center leading-none">
+                  <span 
+                    className="font-black text-white tracking-tight leading-none font-['Poppins']"
+                    style={{ fontSize: 'clamp(28px, 6.5vw, 42px)' }}
+                  >
+                    {Math.abs(fetchedData.remainingData) % 1 === 0 
+                      ? Math.abs(fetchedData.remainingData) 
+                      : Math.abs(fetchedData.remainingData).toFixed(2)}
+                  </span>
+                  <span 
+                    className="text-blue-400 font-bold ml-1 leading-none" 
+                    style={{ fontSize: 'clamp(18px, 4.5vw, 26px)' }}
+                  >
+                    GB
+                  </span>
+                </div>
+
+                <span 
+                  className="font-semibold text-slate-400 tracking-wider uppercase mt-1.5 block text-center font-['Poppins'] leading-none"
+                  style={{ fontSize: '10px' }}
+                >
                   {t('dataRemaining')}
                 </span>
               </div>
             </div>
 
-            <div className="w-full grid grid-cols-2 gap-2 border-t border-white/5 pt-4 mt-2 text-sm font-semibold text-slate-400 font-['Poppins']">
+            <div className="w-full grid grid-cols-2 gap-2 border-t border-white/5 pt-3 sm:pt-4 text-xs sm:text-sm font-semibold text-slate-400 font-['Poppins']">
               <div className="text-center border-r border-white/5">
-                <p className="text-[11px] uppercase text-slate-400 font-['Poppins']">{t('usedData')}</p>
-                <p className="text-white font-semibold mt-0.5 font-['Poppins']">{fetchedData.usedData.toFixed(2)} GB</p>
+                <p className="text-[10px] sm:text-[11px] uppercase text-slate-400 font-['Poppins']">{t('usedData')}</p>
+                <p className="text-white font-semibold mt-0.5 font-['Poppins']">
+                  {Math.abs(fetchedData.usedData) % 1 === 0 
+                    ? Math.abs(fetchedData.usedData) 
+                    : Math.abs(fetchedData.usedData).toFixed(2)} GB
+                </p>
               </div>
               <div className="text-center">
-                <p className="text-[11px] uppercase text-slate-400 font-['Poppins']">{t('totalData')}</p>
-                <p className="text-white font-semibold mt-0.5 font-['Poppins']">{fetchedData.totalData} GB</p>
+                <p className="text-[10px] sm:text-[11px] uppercase text-slate-400 font-['Poppins']">{t('totalData')}</p>
+                <p className="text-white font-semibold mt-0.5 font-['Poppins']">
+                  {fetchedData.remainingData < 0 || fetchedData.totalData < 0 
+                    ? "Unlimited" 
+                    : `${fetchedData.totalData % 1 === 0 ? fetchedData.totalData : fetchedData.totalData.toFixed(2)} GB`
+                  }
+                </p>
               </div>
             </div>
 
-            <div className="w-full mt-8 bg-white/5 rounded-2xl p-4 border border-white/5 text-left font-['Poppins']">
+            <div className="w-full mt-6 sm:mt-8 bg-white/5 rounded-2xl p-4 border border-white/5 text-left font-['Poppins']">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3 font-['Poppins']">{t('workflowStatus')}</p>
               <div className="space-y-3">
                 {statuses.map((stKey) => {
@@ -531,55 +681,80 @@ export default function MyData({ onHome }: MyDataProps) {
           </div>
 
           <div className="lg:col-span-7 space-y-4 font-['Poppins']">
+            {/* Data Plan Name */}
             <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 block mb-1.5 font-['Poppins']">{t('connectedHardwareId')}</span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 block mb-1.5 font-['Poppins']">
+                Data Plan Name
+              </span>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug font-['Poppins']">
-                {fetchedData.title}
+                {fetchedData.title 
+                  ? fetchedData.title.split(/-eSIM|-throttled|,throttled/i)[0].trim() 
+                  : 'eSIM Data Plan'}
               </h2>
               <span className="text-[11px] font-mono text-slate-500 mt-1 block break-all whitespace-normal font-semibold">
                 {t('iccidLabel')}: {selectedCardIccid || iccidNumber}
               </span>
             </div>
 
+            {/* Time Duration & Expiry Date */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center gap-3.5 shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
+              <div className="bg-white border border-slate-100 p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 shadow-sm min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                   <Calendar className="w-4 h-4" />
                 </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider font-['Poppins']">{t('timeDuration')}</p>
-                  <p className="text-sm font-semibold text-slate-800 font-['Poppins']">{fetchedData.days} {t('daysAllotted')}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins']">
+                    {t('timeDuration')}
+                  </p>
+                  <p className="text-[11px] sm:text-sm font-bold text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins'] mt-0.5">
+                    {fetchedData.days} {t('daysAllotted')}
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center gap-3.5 shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
+              <div className="bg-white border border-slate-100 p-3 sm:p-4 rounded-2xl flex items-center gap-2.5 sm:gap-3.5 shadow-sm min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                   <HardDrive className="w-4 h-4" />
                 </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider font-['Poppins']">{t('terminationExpiry')}</p>
-                  <p className="text-sm font-semibold text-slate-800 font-['Poppins']">{fetchedData.expiry}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins']">
+                    Expiry Date
+                  </p>
+                  <p className="text-[11px] sm:text-sm font-bold text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins'] mt-0.5">
+                    {fetchedData.expiry}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-500/10 rounded-2xl p-4 grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2.5">
+            {/* APN Target & Operator Mesh */}
+            <div className="bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-500/10 rounded-2xl p-3 sm:p-4 grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 min-w-0">
                 <Cpu className="w-4 h-4 text-slate-700 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase font-['Poppins']">{t('apnTarget')}</p>
-                  <p className="text-sm font-semibold text-slate-900 uppercase font-mono mt-0.5">{fetchedData.apn}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins']">
+                    {t('apnTarget')}
+                  </p>
+                  <p className="text-[10px] sm:text-xs font-bold text-slate-900 uppercase font-mono mt-0.5 break-all whitespace-normal">
+                    {fetchedData.apn}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 border-l border-slate-200 pl-4">
+              
+              <div className="flex items-center gap-2 border-l border-slate-200 pl-2.5 sm:pl-4 min-w-0">
                 <Wifi className="w-4 h-4 text-slate-700 shrink-0" />
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase font-['Poppins']">{t('operatorMesh')}</p>
-                  <p className="text-sm font-semibold text-slate-900 mt-0.5 truncate font-['Poppins']">{fetchedData.operator}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-tight whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins']">
+                    {t('operatorMesh')}
+                  </p>
+                  <p className="text-[10px] sm:text-xs font-bold text-slate-900 mt-0.5 break-all whitespace-normal font-['Poppins']">
+                    {fetchedData.operator}
+                  </p>
                 </div>
               </div>
             </div>
 
+            {/* Interval History Logs */}
             <div className="border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm font-['Poppins']">
               <div className="bg-slate-50/70 px-4 py-2.5 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="text-[11px] font-semibold uppercase tracking-widest text-slate-600 font-['Poppins']">{t('intervalHistoryLogs')}</h3>
@@ -588,7 +763,7 @@ export default function MyData({ onHome }: MyDataProps) {
                 </span>
               </div>
               
-              <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin">
+              <div className="max-h-[220px] overflow-y-auto divide-y divide-slate-100 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {fetchedData.dailyHistory.map((row, index) => {
                   const totalRows = fetchedData.dailyHistory.length;
                   const rowStyle = totalRows > 15 ? 'px-4 py-1.5' : totalRows > 7 ? 'px-4 py-2.5' : 'px-4 py-3.5';
@@ -604,25 +779,24 @@ export default function MyData({ onHome }: MyDataProps) {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center justify-between text-sm font-semibold font-['Poppins']">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider font-['Poppins']">{t('coverageGeoZone')}:</span>
-              <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1 rounded-lg text-slate-800 font-semibold max-w-[70%] truncate font-['Poppins']">
-                <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                {fetchedData.coverage}
+            {/* Coverage Geo Zone */}
+            <div className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-sm font-semibold font-['Poppins'] shadow-sm">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Globe className="w-4 h-4 text-blue-600 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider font-['Poppins']">
+                  {t('coverageGeoZone')}:
+                </span>
+              </div>
+              
+              <span className="inline-flex items-center bg-slate-50 border border-slate-100 sm:px-5 px-3 py-1.5 rounded-lg text-slate-800 font-semibold break-words whitespace-normal text-xs sm:text-sm">
+                <span>{fetchedData.coverage}</span>
               </span>
             </div>
+
           </div>
         </div>
       )}
 
-      {!fetchedData && !loading && !isLoggedInUser && (
-        <div className="text-center py-20 bg-slate-50/50 border border-dashed border-slate-200 rounded-[28px] font-['Poppins']">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
-            <Globe className="w-5 h-5 animate-pulse" />
-          </div>
-          <p className="text-sm font-semibold text-slate-500 tracking-wide font-['Poppins']">{t('guestPlaceholderDesc')}</p>
-        </div>
-      )}
     </div>
   );
 }

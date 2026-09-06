@@ -38,6 +38,21 @@ const toStringValue = (value: unknown): string | undefined => {
   return undefined;
 };
 
+// 🔴 Anti-Cache URL Parameter
+const appendAntiCacheParam = (url: string) => {
+  const timestamp = new Date().getTime();
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+// 🔴 Anti-Cache Headers
+const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
+  const headers = new Headers(existingHeaders);
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  return headers;
+};
+
 const parseBanner = (value: unknown): BannerItem | null => {
   const row = toObject(value);
   if (!row) return null;
@@ -76,25 +91,21 @@ const extractBanners = (payload: unknown): BannerItem[] => {
 };
 
 // 🌟 [API LAYER LOCK VARIABLES]
-// ရေရှည်အတွက် အကောင်းဆုံးဖြစ်အောင် ရောက်ရှိလာတဲ့ ဒေတာတွေကို Cache သိမ်းပြီး Request တစ်ကြိမ်တည်းပဲသွားစေမည့် စနစ်
 let activeBannerPromise: Promise<BannerItem[]> | null = null;
-let cachedBanners: BannerItem[] | null = null;
 
 export const fetchBanners = async (): Promise<BannerItem[]> => {
-  // ၁။ အကယ်၍ ယခင်က ဒေတာဆွဲယူပြီးသား (Cached data) ရှိနေရင် API လုံးဝမခေါ်တော့ဘဲ ချက်ချင်း ပြန်ပေးမည်
-  if (cachedBanners) {
-    return cachedBanners;
-  }
-
-  // ၂။ အကယ်၍ API ခေါ်ယူခြင်း လုပ်ငန်းစဉ်တစ်ခု တည်းလုပ်ဆောင်နေဆဲ (Pending request) ရှိနေရင် ဒုတိယ Request ထပ်မထွက်စေဘဲ ၎င်းလုပ်ငန်းစဉ်ကိုပဲ မျှဝေသုံးစွဲမည်
+  // 🔴 ရာသက်ပန် Cache မမိစေရန် cachedBanners စစ်ဆေးချက်အား ပိတ်၍ တိုက်ရိုက် Fresh Data ခေါ်ယူမည်
   if (activeBannerPromise) {
     return activeBannerPromise;
   }
 
-  // ၃။ ပထမဦးဆုံးအကြိမ် စတင်ခေါ်ယူမှုအား သိမ်းဆည်းခြင်း
   activeBannerPromise = (async () => {
     try {
-      const response = await fetch(`${PRODUCTS_API_BASE}/banners`);
+      // 🔴 Anti-Cache URL နှင့် Headers သုံးပြီး Banner များကို ခေါ်ယူခြင်း
+      const fetchUrl = appendAntiCacheParam(`${PRODUCTS_API_BASE}/banners`);
+      const headers = getAntiCacheHeaders();
+
+      const response = await fetch(fetchUrl, { headers });
       if (!response.ok) {
         throw new Error(`Banner request failed: ${response.status} ${response.statusText}`);
       }
@@ -102,15 +113,10 @@ export const fetchBanners = async (): Promise<BannerItem[]> => {
       const payload = await response.json();
       const result = extractBanners(payload).sort((a, b) => a.id - b.id);
       
-      // Cache ဒေတာအဖြစ် သတ်မှတ်ခြင်း
-      cachedBanners = result;
       return result;
     } catch (error) {
-      // Error တက်ပါက နောက်တစ်ကြိမ် ပြန်ခေါ်နိုင်ရန် Lock ကို ပြန်ဖြည်ပေးခြင်း
-      cachedBanners = null;
       throw error;
     } finally {
-      // လုပ်ငန်းစဉ်ပြီးဆုံးပါက ခေါ်ဆိုမှုလမ်းကြောင်းကို ရှင်းလင်းပေးခြင်း
       activeBannerPromise = null;
     }
   })();

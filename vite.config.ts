@@ -1,11 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import obfuscator from 'rollup-plugin-obfuscator';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      plugins: [
+        (obfuscator as any)({
+          global: true,
+          compact: true,
+          controlFlowFlattening: true,
+        }),
+      ],
+    },
   },
-  publicDir: 'public',
 });

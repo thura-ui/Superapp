@@ -28,6 +28,21 @@ const asText = (value: unknown): string => {
   return '';
 };
 
+// 🔴 Anti-Cache URL Generator Function
+const appendAntiCacheParam = (url: string) => {
+  const timestamp = new Date().getTime();
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+// 🔴 Anti-Cache Default Headers Generator
+const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
+  const headers = new Headers(existingHeaders);
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  return headers;
+};
+
 const findFirstTextByKeys = (value: unknown, keys: string[], depth = 0): string => {
   if (depth > 5) {
     return '';
@@ -108,8 +123,16 @@ const normalizeProfile = (payload: unknown): AuthProfile => {
   return { name, email, phone };
 };
 
+// 🔴 Anti-Cache logic များ ထည့်သွင်းထားသော requestJson Function
 const requestJson = async (url: string, init?: RequestInit) => {
-  const response = await fetch(url, init);
+  const headers = getAntiCacheHeaders(init?.headers);
+  const fetchUrl = appendAntiCacheParam(url);
+
+  const response = await fetch(fetchUrl, {
+    ...init,
+    headers,
+  });
+  
   const payload = await response.json().catch(() => ({}));
   return { response, payload };
 };
@@ -183,7 +206,6 @@ export const login = async (credentials: unknown) => {
 
   localStorage.setItem(AUTH_TOKEN_KEY, token);
 
-  // Try calling Auth Me immediately, but do not block login if profile API fails.
   let profile: AuthProfile | null = null;
   try {
     profile = await getProfile();
@@ -198,17 +220,18 @@ export const logout = async () => {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
   if (token) {
-    await fetch(`${AUTH_API_BASE}/logout`, {
+    const headers = getAntiCacheHeaders({ Authorization: `Bearer ${token}` });
+    const fetchUrl = appendAntiCacheParam(`${AUTH_API_BASE}/logout`);
+
+    await fetch(fetchUrl, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers,
     }).catch(() => undefined);
   }
 
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_PROFILE_KEY);
 };
-
-// authApi.ts ထဲက getTotalSparks ကို အခုလို အစားထိုးပါ
 
 export const getTotalSparks = async () => {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -230,15 +253,14 @@ export const getTotalSparks = async () => {
   const nestedData = toObject(obj?.data);
   const finalData = nestedData || obj;
 
-  // API ကနေ လာသမျှ keys အကုန်လုံးကို အောက်က Component ဆီ ပို့ပေးလိုက်မယ်
   return {
     total_sparks: Number(finalData?.total_sparks) || 0,
-    target_sparks: Number(finalData?.target_sparks ?? finalData?.next_tier_sparks ?? 100) || 100, // API က မပေးရင် Bug မတက်အောင် fallback 100 ထားပေးပါတယ်
+    target_sparks: Number(finalData?.target_sparks ?? finalData?.next_tier_sparks ?? 100) || 100,
     tier_name: asText(finalData?.tier_name) || 'Member'
   };
 };
 
-// 🌟 Edit Profile API (PUT Method) - Email ပါဝင်အောင် ပြင်ဆင်ထားပါသည်
+// 🌟 Edit Profile API (PUT Method)
 export const updateProfile = async (data: { name: string; email: string; phone: string }) => {
   const token = localStorage.getItem('authToken');
   if (!token) throw new Error('No auth token found');
@@ -256,7 +278,6 @@ export const updateProfile = async (data: { name: string; email: string; phone: 
     throw new Error(getErrorMessage(payload, 'Failed to update profile'));
   }
 
-  // LocalStorage ထဲက Cached Profile ကိုပါ တခါတည်း Update လုပ်ခြင်း
   const currentCached = getCachedProfile();
   if (currentCached) {
     localStorage.setItem('authProfile', JSON.stringify({ ...currentCached, ...data }));
@@ -284,7 +305,7 @@ export const changePasswordApi = async (passwordData: unknown) => {
   return payload;
 };
 
-// 🌟 [ADDED]: Forgot Password API (Email သို့ Reset Link ပို့ရန် တောင်းဆိုခြင်း)
+// 🌟 Forgot Password API
 export const forgotPasswordApi = async (email: string) => {
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/forgot-password`, {
     method: 'POST',
@@ -298,7 +319,7 @@ export const forgotPasswordApi = async (email: string) => {
   return payload;
 };
 
-// 🌟 [ADDED]: Reset Password API (Email ထဲက Token ကိုသုံးပြီး Password အသစ် အပြီးသတ်ပြောင်းလဲခြင်း)
+// 🌟 Reset Password API
 export const resetPasswordApi = async (resetData: unknown) => {
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/reset-password`, {
     method: 'POST',

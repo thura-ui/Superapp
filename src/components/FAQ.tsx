@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface FAQProps {
@@ -103,15 +103,11 @@ export default function FAQ({ onBack, initialCategory }: FAQProps) {
 
         setCategories(fetchedCategories);
 
-        // Active Category သတ်မှတ်ခြင်း
         const defaultCategory = initialCategory || 'FAQs';
         setActiveCategory(defaultCategory);
 
-        // Auto-expand the first item of the selected category
-        const activeCatData = fetchedCategories.find(c => c.name === defaultCategory);
-        if (activeCatData && activeCatData.items.length > 0) {
-          setExpandedId(activeCatData.items[0].id);
-        }
+        // စာမျက်နှာစဝင်ချိန်တွင် အလိုအလျောက် ပွင့်မနေစေရန် null ထားသည်
+        setExpandedId(null);
 
       } catch (err: any) {
         console.error("Failed to fetch API data:", err);
@@ -142,22 +138,23 @@ export default function FAQ({ onBack, initialCategory }: FAQProps) {
       </div>
 
       {/* Header */}
-      <div className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
-        <div className="flex items-center gap-3 text-left">
+      <div className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-6 md:pb-10">
+        <div className="flex items-center gap-2.5 text-left">
+          {/* 🔴 User Guide မိုဘိုင်းလ် Back Button စတိုင်လ်အတိုင်း ပြင်ဆင်ထားပါသည် 🔴 */}
           <button
             onClick={onBack}
-            className="p-2 hover:bg-white/80 rounded-lg transition-colors -ml-2 md:hidden cursor-pointer border-0 bg-transparent"
+            type="button"
+            className="p-1.5 md:hidden rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all border-none cursor-pointer flex items-center justify-center shrink-0"
             aria-label="Go back"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-700" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="min-w-0">
-            {/* 🌟 Font weight ကို Navbar အတိုင်း font-semibold သို့ ပြောင်းလဲထားပါသည် */}
-            <h1 className="text-2xl md:text-4xl font-semibold text-slate-900 tracking-tight">
-              Help Center
-            </h1>
-            {/* 🌟 Subtitle ကို font-semibold ပြောင်းလဲထားပါသည် */}
-            <p className="text-xs md:text-sm font-semibold text-slate-500 mt-1">
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg md:text-3xl font-semibold text-slate-900 tracking-tight leading-none m-0 truncate">
+              Frequently asked questions
+            </h3>
+            <p className="text-xs md:text-sm font-semibold text-slate-500 mt-2">
               Find instant answers, terms, and policies regarding Simless travel eSIM.
             </p>
           </div>
@@ -178,115 +175,75 @@ export default function FAQ({ onBack, initialCategory }: FAQProps) {
           </div>
         </div>
       ) : (
-        <>
-          {/* Categories / Tabs */}
-          <div className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-            <div className="flex flex-wrap gap-2.5 sm:gap-3 border-b border-solid border-slate-200/60 pb-4">
-              {categories.map((category) => {
-                const isActive = activeCategory === category.name;
-                return (
-                  <button
-                    key={category.name}
-                    onClick={() => {
-                      setActiveCategory(category.name);
-                      setExpandedId(category.items[0]?.id || null);
-                    }}
-                    /* 🌟 Tab Button များတွင် font-semibold သို့ ပြောင်းလဲထားပါသည် */
-                    className={`px-5 py-2.5 rounded-full font-semibold text-sm sm:text-[14px] transition-all duration-300 border border-solid cursor-pointer whitespace-nowrap active:scale-95 shadow-sm ${
-                      isActive
-                        ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-600/20'
-                        : 'bg-white/70 border-slate-200/80 text-slate-700 hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-600'
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div className="relative px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+          <div className="space-y-4">
+            {currentCategoryData?.items.map((item) => {
+              const isExpanded = expandedId === item.id;
 
-          {/* Content Cards Section */}
-          <div className="relative px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-            <div className="space-y-4">
-              {currentCategoryData?.items.map((item, index) => (
-                <div key={item.id} className="relative overflow-hidden rounded-[28px] shadow-[0_18px_50px_rgba(15,23,42,0.06)] border border-solid border-white/80">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${
-                    index % 4 === 0 ? 'from-purple-400/10 to-pink-500/10' :
-                    index % 4 === 1 ? 'from-blue-400/10 to-cyan-500/10' :
-                    index % 4 === 2 ? 'from-green-400/10 to-emerald-500/10' :
-                    'from-orange-400/10 to-amber-500/10'
-                  }`} />
-                  <div className="absolute inset-0 bg-white/65 backdrop-blur-xl" />
-
+              return (
+                <div 
+                  key={item.id} 
+                  className={`relative overflow-hidden rounded-[24px] bg-white/60 backdrop-blur-md border transition-all duration-300 group cursor-pointer ${
+                    isExpanded 
+                      ? 'border-blue-500/50 shadow-[0_12px_35px_rgba(37,99,235,0.18)] bg-white/80' 
+                      : 'border-blue-500/10 hover:border-blue-500/40 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_35px_rgba(37,99,235,0.15)]'
+                  }`}
+                >
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={() => toggleExpand(item.id)}
-                      className="w-full px-6 py-5 flex items-center justify-between hover:bg-white/40 active:bg-white/50 transition-all text-left border-0 cursor-pointer bg-transparent"
+                      className="w-full px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between hover:bg-white/40 active:bg-white/50 transition-all text-left border-0 cursor-pointer bg-transparent outline-none select-none"
                     >
-                      <div className="flex items-start gap-3 sm:gap-4 flex-1 text-left">
-                        {/* 🌟 Badge Number ကို font-semibold ပြောင်းလဲထားပါသည် */}
-                        <span className={`font-semibold flex-shrink-0 text-base sm:text-lg w-6 h-6 rounded-full flex items-center justify-center ${
-                          index % 4 === 0 ? 'bg-gradient-to-br from-purple-500 to-pink-600 text-white' :
-                          index % 4 === 1 ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white' :
-                          index % 4 === 2 ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' :
-                          'bg-gradient-to-br from-orange-500 to-amber-600 text-white'
-                        } shadow-md`}>
-                          {index + 1}
-                        </span>
-                        {/* 🌟 Question Text ကို font-semibold ပြောင်းလဲထားပါသည် */}
-                        <span className="text-slate-900 text-base leading-snug font-semibold tracking-tight mt-0.5">
+                      <div className="flex items-center flex-1 text-left">
+                        <span className={`text-sm sm:text-base leading-snug font-semibold tracking-tight transition-colors ${
+                          isExpanded ? 'text-blue-600' : 'text-slate-900 group-hover:text-blue-600'
+                        }`}>
                           {item.question}
                         </span>
                       </div>
-                      <ChevronRight
-                        className={`w-5 h-5 sm:w-6 sm:h-6 text-slate-500 flex-shrink-0 ml-3 transition-transform ${
-                          expandedId === item.id ? 'rotate-90' : ''
+                      
+                      <ChevronDown
+                        className={`w-5 h-5 text-slate-500 flex-shrink-0 ml-3 transition-transform duration-300 ${
+                          isExpanded ? 'rotate-180 text-blue-600' : ''
                         }`}
                       />
                     </button>
 
-                    {expandedId === item.id && (
-                      <div className="px-6 pb-6 pt-1">
-                        <div className="ml-0 sm:ml-10 relative overflow-hidden rounded-2xl">
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-md" />
-                          <div className="relative border border-solid border-white/80 p-5 rounded-2xl">
-                            
-                            {/* HTML tags များကို မှန်ကန်စွာ Render လုပ်ပေးမည့်အပိုင်း */}
+                    {isExpanded && (
+                      <div className="overflow-hidden px-5 sm:px-6 pb-5 sm:pb-6 pt-1">
+                        <div className="relative overflow-hidden rounded-2xl">
+                          <div className="absolute inset-0 bg-white/90 backdrop-blur-md" />
+                          <div className="relative border border-solid border-blue-100 p-4 sm:p-5 rounded-2xl shadow-inner">
                             {item.isHtml ? (
                               <div 
-                                className="text-slate-700 text-sm sm:text-base font-semibold text-justify 
-                                           [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mt-6 [&>h2]:mb-3 [&>h2]:text-slate-900
-                                           [&>h3]:text-lg [&>h3]:font-semibold [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-slate-900
-                                           [&>h4]:text-md [&>h4]:font-semibold [&>h4]:mt-4 [&>h4]:mb-2 [&>h4]:text-slate-900
-                                           [&>p]:mb-3 [&>p]:leading-7 [&>p:last-child]:mb-0
-                                           [&>ol]:list-decimal [&>ol]:ml-6 [&>ol>li]:mb-2 [&>ol>li>p]:mb-0
-                                           [&>ul]:list-disc [&>ul]:ml-6 [&>ul>li]:mb-2 [&>ul>li>p]:mb-0
-                                           [&>hr]:my-6 [&>hr]:border-slate-300
-                                           [&_a]:text-cyan-600 [&_a]:underline
-                                           [&_strong]:font-semibold [&_strong]:text-slate-900"
+                                className="text-slate-700 text-xs sm:text-sm font-normal text-left 
+                                           [&>p]:mb-3 [&>p]:leading-relaxed [&>p:last-child]:mb-0
+                                           [&>p>strong]:font-bold [&>p>strong]:text-slate-900 [&>p>strong]:block [&>p>strong]:mt-3 [&>p>strong]:mb-1
+                                           [&_br]:my-1
+                                           [&_a]:text-blue-600 [&_a]:underline"
                                 dangerouslySetInnerHTML={{ __html: item.answer }}
                               />
                             ) : (
                               item.answer.split('\n\n').map((paragraph, pIdx) => (
                                 <p
                                   key={pIdx}
-                                  className="whitespace-pre-line mb-4 last:mb-0 text-justify text-slate-700 text-sm sm:text-base leading-7 font-semibold"
+                                  className="whitespace-pre-line mb-3 last:mb-0 text-left text-slate-700 text-xs sm:text-sm leading-relaxed font-normal"
                                 >
                                   {paragraph}
                                 </p>
                               ))
                             )}
-
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

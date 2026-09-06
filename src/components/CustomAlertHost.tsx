@@ -113,9 +113,10 @@ export default function CustomAlertHost() {
   }, [payload]);
 
   return (
+    /* 🔴 mobile-typography-fix class ကို အပြင်ဘက်ဆုံး overlay တွင် ထည့်သွင်းပေးထားပါသည် 🔴 */
     <div
       id="customAlertOverlay"
-      className={`custom-alert-overlay ${isActive ? 'active' : ''}`}
+      className={`custom-alert-overlay mobile-typography-fix ${isActive ? 'active' : ''}`}
       aria-hidden={!isActive}
     >
       <div

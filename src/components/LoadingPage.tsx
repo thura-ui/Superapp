@@ -32,7 +32,7 @@ export default function LoadingPage() {
             <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-blue-50/20 pointer-events-none" />
             
             <img
-              src="/Loading_Logo.png"
+              src="/Simless-logo.png"
               alt="Simless Logo"
               className="w-full h-full object-contain"
             />

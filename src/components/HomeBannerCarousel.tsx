@@ -48,7 +48,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  // 🌟 Touch Swipe စနစ်အတွက် ကိုးကားချက်များ
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -63,7 +62,9 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
   useEffect(() => {
     fetchBanners()
       .then((items) => {
-        setBanners(items);
+        // 🌟 is_active: true ဖြစ်တဲ့ Banner များကိုသာ စစ်ထုတ်ပြီး သိမ်းဆည်းပါသည်
+        const activeBanners = items.filter(b => b.is_active !== false);
+        setBanners(activeBanners);
       })
       .catch(() => {
         setBanners([]);
@@ -153,7 +154,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
     });
   }, [slideCount]);
 
-  // 🌟 [TOUCH EVENTS HANDLING]: လက်ဖြင့် ဘယ်ညာ Swipe ဆွဲပြီး Move လုပ်နိုင်မည့် Function များ
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
   };
@@ -164,18 +164,21 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
 
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
-    const swipeThreshold = 50; // Swipe အလုပ်လုပ်မည့် အကွာအဝေး Sensitivity
+    const swipeThreshold = 50;
     
     if (diff > swipeThreshold) {
-      // Left Swipe -> Next Slide သို့သွားရန်
       handleNext();
     } else if (diff < -swipeThreshold) {
-      // Right Swipe -> Prev Slide သို့သွားရန်
       handlePrev();
     }
-    // သြဒိနိတ်များကို ပြန်သုညညှိခြင်း
     touchStartX.current = 0;
     touchEndX.current = 0;
+  };
+
+  const handleSelectCountry = (country: Country) => {
+    setShowSuggestions(false);
+    setSearchQuery('');
+    onSelectCountry(country);
   };
 
   const renderSearchBar = (customClass = "") => (
@@ -193,7 +196,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
         className="w-full pl-11 pr-5 py-3 sm:py-3.5 bg-white sm:bg-white/20 backdrop-blur-md border border-solid border-slate-200 sm:border-white/40 rounded-2xl text-slate-700 placeholder-slate-400 sm:placeholder-slate-700/50 font-black text-xs sm:text-sm focus:outline-none focus:border-blue-500 sm:focus:border-cyan-400 focus:bg-white sm:focus:bg-white/30 tracking-wide transition-all shadow-sm sm:shadow-none"
       />
       {showSuggestions && searchQuery.trim() && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-solid border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.45)] overflow-hidden max-h-56 overflow-y-auto scrollbar-hide" >
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-solid border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.45)] overflow-hidden max-h-56 overflow-y-auto scrollbar-hide">
           {searchLoading ? (
             <div className="px-4 py-3 text-xs text-white/60 font-bold">Searching...</div>
           ) : searchResults.length > 0 ? (
@@ -220,54 +223,22 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
     </div>
   );
 
-  const renderBannerContent = (banner: BannerItem) => {
-    if (banner.id === 2) {
-      return (
-        <div className="hidden sm:flex absolute inset-0 z-10 pointer-events-none">
-  <div className="flex flex-col justify-center items-start pl-16 md:pl-20 lg:pl-24 w-1/2">
-
-    {/* Search Bar */}
-    <div className="absolute left-14 top-[49%] z-20 w-[400px] pointer-events-auto">
-      {renderSearchBar()}
-    </div>
-
-  </div>
-</div>
-      );
-    }
-
-    if (banner.id === 1 || banner.id === 3) {
-      return null;
-    }
-
-    return banner.title || banner.description ? (
-      <div className="absolute inset-0 flex flex-col justify-center items-center px-6 sm:px-16 py-2 sm:py-12 z-10 w-full space-y-0.5 sm:space-y-2 text-center pointer-events-none">
-        {banner.title && (
-          <h2 className="text-xs sm:text-2xl lg:text-3xl font-black text-slate-900 drop-shadow-md leading-tight">{banner.title}</h2>
-        )}
-        {banner.description && (
-          <p className="text-[9px] sm:text-base lg:text-lg text-slate-800 font-bold sm:font-medium drop-shadow-sm leading-snug">{banner.description}</p>
-        )}
-      </div>
-    ) : null;
-  };
-
   return (
     <section
-      className="relative overflow-visible max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-10 select-none"
+      className="relative overflow-hidden w-full pb-6 sm:pb-10 select-none z-0"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 🌟 Container ပေါ်တွင် Touch Event Listeners များ ချိတ်ဆက်ပေးထားပါသည် */}
+      {/* Full-Width Screen Banner Container */}
       <div 
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] w-full bg-white shadow-[0_10px_35px_rgba(59,130,246,0.2)] sm:shadow-[0_15px_45px_rgba(59,130,246,0.35)] border border-solid border-blue-50/50 group/carousel transition-all duration-300 sm:hover:shadow-[0_25px_60px_rgba(59,130,246,0.45)]"
+        className="relative overflow-hidden w-full bg-white group/carousel transition-all duration-300"
       >
         
         {bannerLoaded && slideCount === 0 && (
-          <div className="w-full h-36 sm:h-96 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center p-6 sm:p-10">
+          <div className="w-full h-36 sm:h-80 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center p-6 sm:p-10">
             <h1 className="text-sm sm:text-xl text-white font-bold">Banner data is currently unavailable.</h1>
           </div>
         )}
@@ -284,18 +255,28 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
               <img
                 src={banner.image_url}
                 alt=""
-                className="w-full h-auto min-h-[160px] sm:min-h-[400px] block object-cover object-center"
+                /* 🌟 min-h ကို Normal Aspect Ratio ဖြစ်အောင် ချိန်ညှိထားပါသည် */
+                className="w-full h-auto min-h-[180px] sm:min-h-[440px] lg:min-h-[520px] block object-cover object-center"
               />
-              {renderBannerContent(banner)}
+              
+              {/* ID=2 Banner ပေါ်တွင် Search Bar သီးသန့်တင်ပေးခြင်း */}
+              {banner.id === 2 && (
+                <div className="hidden sm:flex absolute inset-0 z-10 pointer-events-none">
+                  <div className="flex flex-col justify-center items-start pl-16 md:pl-20 lg:pl-24 w-1/2">
+                    <div className="absolute left-14 top-[48%] z-20 w-[400px] pointer-events-auto">
+                      {renderSearchBar()}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* 🌟 [ARROW MOBILE HIDDEN]: hidden sm:block ထည့်သွင်းထား၍ Mobile တွင် Arrow များ လုံးဝပေါ်မည်မဟုတ်ပါ */}
+        {/* Left/Right Arrow Navigation */}
         {slideCount > 1 && (
           <>
-            {/* Left Arrow */}
-            <div className="absolute bottom-4 sm:bottom-14 md:bottom-16 left-3 sm:left-10 lg:left-14 z-20 pointer-events-none hidden sm:block">
+            <div className="absolute bottom-4 sm:bottom-10 md:bottom-12 left-3 sm:left-10 lg:left-14 z-20 pointer-events-none hidden sm:block">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handlePrev(); }}
@@ -306,8 +287,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
               </button>
             </div>
 
-            {/* Right Arrow */}
-            <div className="absolute bottom-4 sm:bottom-14 md:bottom-15 right-3 sm:right-10 lg:right-14 z-20 pointer-events-none hidden sm:block">
+            <div className="absolute bottom-4 sm:bottom-10 md:bottom-12 right-3 sm:right-10 lg:right-14 z-20 pointer-events-none hidden sm:block">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleNext(); }}
@@ -322,7 +302,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
 
         {/* Carousel Indicator Dots */}
         {slideCount > 1 && (
-          <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
+          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
             {displayBanners.map((banner, index) => (
               <button
                 key={banner.id}
@@ -340,13 +320,12 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
         )}
       </div>
 
-      {/* Mobile Search Bar Under */}
       {/* Mobile Search Bar */}
-{isMobile && (
-  <div className="block sm:hidden mt-4 px-4">
-    {renderSearchBar()}
-  </div>
-)}
+      {isMobile && (
+        <div className="block sm:hidden mt-4 px-4">
+          {renderSearchBar()}
+        </div>
+      )}
     </section>
   );
 }

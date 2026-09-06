@@ -45,7 +45,8 @@ export default function HelpCenter({ onBack, onTravelEsim, onEsimCheck, onApnSet
   ];
 
   return (
-    <section className="relative w-full bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] overflow-hidden font-['Poppins']">
+    /* 🔴 mobile-typography-fix class ကို ထည့်သွင်း၍ index.css ရှိ mobile CSS နှင့် ချိတ်ဆက်ပေးထားပါသည် 🔴 */
+    <section className="mobile-typography-fix relative w-full bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] overflow-hidden font-['Poppins']">
       
       {/* Background Glow Effect */}
       <div className="absolute inset-0 pointer-events-none">
@@ -53,23 +54,18 @@ export default function HelpCenter({ onBack, onTravelEsim, onEsimCheck, onApnSet
         <div className="absolute bottom-[8%] -right-[10%] w-[40%] h-[40%] bg-emerald-400/12 rounded-full blur-[100px]" />
       </div>
 
-      {/* Main Container */}
-      <div className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-10 pb-16">
+      {/* Main Container - Header အောက် သန့်ရှင်းစွာ ရောက်သွားစေရန် pt-20 md:pt-28 ထည့်သွင်းထားပါသည် */}
+      <div className="relative max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-28 pb-16">
         
         {/* Header Section */}
         <div className="mb-6 md:mb-10 text-left">
-          {/* 🌟 Font weight ကို Navbar အတိုင်း font-semibold သို့ ပြောင်းလဲထားပါသည် */}
           <h1 className="text-2xl md:text-4xl font-semibold text-slate-900 tracking-tight font-['Poppins']">
             {t('helpCenterTitle')}
           </h1>
-          {/* 🌟 Subtitle ကိုလည်း font-semibold ပြောင်းလဲထားပါသည် */}
-          <p className="text-xs md:text-sm font-semibold text-slate-500 mt-1 font-['Poppins']">
-            {t('helpCenterDesc')}
-          </p>
         </div>
 
         {/* Grid Items Content */}
-        <div className="grid grid-cols-2 gap-3.5 sm:gap-5 font-['Poppins']">
+        <h3 className="grid grid-cols-2 gap-3.5 sm:gap-5 font-['Poppins']">
           {helpItems.map((item, index) => {
             const Icon = item.icon;
             const handleClick = item.action === 'travelEsim'
@@ -119,12 +115,10 @@ export default function HelpCenter({ onBack, onTravelEsim, onEsimCheck, onApnSet
                   
                   {/* Title (Mobile & Desktop Dynamic Text) */}
                   <div>
-                    {/* 🌟 Mobile View Title: font-semibold အဖြစ် ပြောင်းထားပါသည် */}
                     <div className="block sm:hidden text-xs sm:text-sm font-semibold text-slate-900 tracking-tight leading-snug whitespace-normal break-words font-['Poppins']">
                       {item.mobileTitle}
                     </div>
 
-                    {/* 🌟 Desktop View Title: font-semibold အဖြစ် ပြောင်းထားပါသည် */}
                     <div className="hidden sm:block text-base font-semibold text-slate-900 tracking-tight leading-snug font-['Poppins']">
                       {item.title}
                     </div>
@@ -133,7 +127,7 @@ export default function HelpCenter({ onBack, onTravelEsim, onEsimCheck, onApnSet
               </button>
             );
           })}
-        </div>
+        </h3>
       </div>
     </section>
   );

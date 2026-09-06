@@ -13,25 +13,43 @@ const redirectToLogin = () => {
   window.location.href = '/login'; 
 };
 
+// 🔴 Anti-Cache URL Generator Function
+const appendAntiCacheParam = (url: string) => {
+  const timestamp = new Date().getTime();
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+// 🔴 Anti-Cache Default Headers
+const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
+  const headers = new Headers(existingHeaders);
+  headers.set('Content-Type', 'application/json');
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  return headers;
+};
+
 const request = async (endpoint: string, options: RequestInit = {}) => {
   const authToken = localStorage.getItem('authToken');
   const cartToken = localStorage.getItem(CART_TOKEN_KEY);
 
-  // 🔴 Login ဝင်ထားခြင်း မရှိပါက ချက်ချင်း Login Page သို့ ပို့မည် (Guest စနစ်အား ပိတ်လိုက်ပါသည်)
+  // 🔴 Login ဝင်ထားခြင်း မရှိပါက ချက်ချင်း Login Page သို့ ပို့မည်
   if (!authToken) {
     redirectToLogin();
     return new Promise(() => {}); 
   }
 
-  const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  const headers = getAntiCacheHeaders(options.headers);
   headers.set('Authorization', `Bearer ${authToken}`);
   
   if (cartToken) {
     headers.set('X-Cart-Token', cartToken);
   }
 
-  const response = await fetch(`${CART_API_BASE}${endpoint}`, {
+  // 🔴 Time-stamp ကိုသုံးပြီး URL ကို အမြဲအသစ်ဖြစ်နေစေခြင်း
+  const fetchUrl = appendAntiCacheParam(`${CART_API_BASE}${endpoint}`);
+
+  const response = await fetch(fetchUrl, {
     ...options,
     headers,
   });
@@ -145,12 +163,14 @@ export const fetchPaymentMethods = async (): Promise<PaymentMethod[]> => {
     return [];
   }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${authToken}`
-  };
+  // 🔴 Anti-Cache Headers ထည့်သွင်းခြင်း
+  const headers = getAntiCacheHeaders();
+  headers.set('Authorization', `Bearer ${authToken}`);
 
-  const response = await fetch(`${API_BASE}/payment-methods`, { headers });
+  // 🔴 URL တွင် Timestamp ကပ်ခြင်း
+  const fetchUrl = appendAntiCacheParam(`${API_BASE}/payment-methods`);
+
+  const response = await fetch(fetchUrl, { headers });
   if (!response.ok) {
     throw new Error(`Failed to fetch payment methods: ${response.statusText}`);
   }
@@ -172,7 +192,7 @@ export const fetchPaymentMethods = async (): Promise<PaymentMethod[]> => {
   }));
 };
 
-// 🌟 SUBMIT CHECKOUT METHOD (ငွေချေမှု အောင်မြင်မှုမရှိပါက Cart ကို Auto-Clear လုပ်ပေးမည့် စနစ်)
+// 🌟 SUBMIT CHECKOUT METHOD
 export const submitCheckout = async (payload: CheckoutPayload): Promise<CheckoutResponse> => {
   const authToken = localStorage.getItem('authToken');
   
@@ -181,20 +201,21 @@ export const submitCheckout = async (payload: CheckoutPayload): Promise<Checkout
     throw new Error('Unauthorized');
   }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${authToken}`
-  };
+  // 🔴 Anti-Cache Headers ထည့်သွင်းခြင်း
+  const headers = getAntiCacheHeaders();
+  headers.set('Authorization', `Bearer ${authToken}`);
+
+  // 🔴 URL တွင် Timestamp ကပ်ခြင်း
+  const fetchUrl = appendAntiCacheParam(`${API_BASE}/checkout`);
 
   try {
-    const response = await fetch(`${API_BASE}/checkout`, {
+    const response = await fetch(fetchUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      // API Checkout Endpoint Level မှာ တင် Failure ဖြစ်သွားရင် Cart ကို တန်းပြီး ရှင်းထုတ်ပစ်ခြင်း
       await clearCart().catch(() => {});
       
       let detail = response.statusText;
@@ -207,7 +228,6 @@ export const submitCheckout = async (payload: CheckoutPayload): Promise<Checkout
 
     const resResult: CheckoutResponse = await response.json();
 
-    // 🌟 API က ပေးချေမှု အောင်မြင်ခြင်း မရှိပါက (Success : false ဖြစ်နေပါက) Cart ကို ရှင်းထုတ်ပစ်မည့် ဖြည့်စွက်ချက်
     if (!resResult?.payment?.success) {
       console.log('[TELEMETRY ALERT] Payment verification unsuccessful. Purging connection slots.');
       await clearCart().catch(() => {});
@@ -215,7 +235,6 @@ export const submitCheckout = async (payload: CheckoutPayload): Promise<Checkout
 
     return resResult;
   } catch (error) {
-    // ကွန်ရက်လိုင်းပြတ်တောက်ခြင်း သို့မဟုတ် Runtime Exception ဖြစ်သွားပါကလည်း Cart အား Auto-Clear ပေးခြင်း
     await clearCart().catch(() => {});
     throw error;
   }
@@ -254,12 +273,16 @@ const normalizeOrderPaymentStatusResponse = (raw: any): OrderPaymentStatusRespon
 export const checkOrderPaymentStatus = async (orderNumber: string): Promise<OrderPaymentStatusResponse> => {
   const token = getAuthTokenOrThrow();
 
-  const response = await fetch(`${API_BASE}/orders/${encodeURIComponent(orderNumber)}/payment-status`, {
+  // 🔴 Anti-Cache Headers ထည့်သွင်းခြင်း
+  const headers = getAntiCacheHeaders();
+  headers.set('Authorization', `Bearer ${token}`);
+
+  // 🔴 URL တွင် Timestamp ကပ်ခြင်း
+  const fetchUrl = appendAntiCacheParam(`${API_BASE}/orders/${encodeURIComponent(orderNumber)}/payment-status`);
+
+  const response = await fetch(fetchUrl, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -274,7 +297,6 @@ export const checkOrderPaymentStatus = async (orderNumber: string): Promise<Orde
   const raw = await response.json();
   const normalized = normalizeOrderPaymentStatusResponse(raw);
 
-  // 🌟 Payment Status စစ်ဆေးစဉ် 'failed' သို့မဟုတ် 'unpaid' ဖြစ်နေပါကလည်း Cart အား Auto-Purge လုပ်ဆောင်ပေးခြင်း
   if (normalized.payment_status === 'failed' || normalized.payment_status === 'unpaid') {
     await clearCart().catch(() => {});
   }
@@ -282,16 +304,20 @@ export const checkOrderPaymentStatus = async (orderNumber: string): Promise<Orde
   return normalized;
 };
 
-// 🌟 [UPDATED] Environment Base URL ကိုသုံးပြီး Bearer Token ဖြင့် တိကျမှန်ကန်စွာ POST လုပ်မည့် Cancel Order API Function
+// 🌟 CANCEL ORDER API FUNCTION
 export const cancelOrder = async (orderNumber: string): Promise<CheckoutResponse> => {
   const token = getAuthTokenOrThrow();
 
-  const response = await fetch(`${API_BASE}/orders/${encodeURIComponent(orderNumber)}/cancel`, {
+  // 🔴 Anti-Cache Headers ထည့်သွင်းခြင်း
+  const headers = getAntiCacheHeaders();
+  headers.set('Authorization', `Bearer ${token}`);
+
+  // 🔴 URL တွင် Timestamp ကပ်ခြင်း
+  const fetchUrl = appendAntiCacheParam(`${API_BASE}/orders/${encodeURIComponent(orderNumber)}/cancel`);
+
+  const response = await fetch(fetchUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -303,6 +329,5 @@ export const cancelOrder = async (orderNumber: string): Promise<CheckoutResponse
     throw new Error(`Failed to cancel order: ${detail}`);
   }
 
-  // 🌟 [FIXED] အသုံးပြုသူ Cancel နှိပ်လျှင် Cart ကို အလိုအလျောက် မရှင်းတော့စေရန် clearCart() အား ဖယ်ရှားလိုက်ပါသည်
   return response.json();
 };

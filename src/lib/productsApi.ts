@@ -52,10 +52,25 @@ export interface PaginatedApiResponse {
   meta: ApiPaginationMeta;
 }
 
-// 🌟 Base URL Helper (.env မှ VITE_PRODUCTS_API_BASE_URL ကို သီးသန့်ယူသုံးခြင်း)
+// 🌟 Base URL Helper
 const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL || '';
   return envUrl.replace(/\/+$/, '');
+};
+
+// 🔴 Anti-Cache URL Generator Helper
+const appendAntiCacheParam = (url: string): string => {
+  const timestamp = new Date().getTime();
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+// 🔴 Anti-Cache Default Headers Generator Helper
+const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
+  const headers = new Headers(existingHeaders);
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  headers.set('Pragma', 'no-cache');
+  headers.set('Expires', '0');
+  return headers;
 };
 
 // 🌟 Image URL Slashes Clean လုပ်ပေးသည့် Helper
@@ -83,7 +98,7 @@ const parseProduct = (raw: any): ProductItem => {
   };
 };
 
-// 🌟 Popular Products API Fetcher (per_page ကို လုံးဝ မသုံးဘဲ type ခေါ်ဆိုခြင်း)
+// 🌟 Popular Products API Fetcher
 export async function fetchPopularProducts(params?: { type?: string }): Promise<ProductItem[]> {
   const cleanBase = getApiBaseUrl();
   const queryParams = new URLSearchParams();
@@ -93,7 +108,13 @@ export async function fetchPopularProducts(params?: { type?: string }): Promise<
   }
 
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  const res = await fetch(`${cleanBase}/products/popular${queryString}`, { method: 'GET' });
+  
+  // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+  const rawUrl = `${cleanBase}/products/popular${queryString}`;
+  const fetchUrl = appendAntiCacheParam(rawUrl);
+  const headers = getAntiCacheHeaders();
+
+  const res = await fetch(fetchUrl, { method: 'GET', headers });
   
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
@@ -113,7 +134,12 @@ export async function fetchProductsPaginated(params: { type: 'country' | 'region
   if (params.page) queryParams.append('page', String(params.page));
   if (params.search) queryParams.append('search', params.search);
 
-  const res = await fetch(`${cleanBase}/products?${queryParams.toString()}`, { method: 'GET' });
+  // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+  const rawUrl = `${cleanBase}/products?${queryParams.toString()}`;
+  const fetchUrl = appendAntiCacheParam(rawUrl);
+  const headers = getAntiCacheHeaders();
+
+  const res = await fetch(fetchUrl, { method: 'GET', headers });
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   
   const body = await res.json();
@@ -138,7 +164,13 @@ export async function fetchProductsPaginated(params: { type: 'country' | 'region
 // 🌟 Plan Detail Page API Fetcher
 export async function fetchProductBySlug(slug: string): Promise<ProductItem> {
   const cleanBase = getApiBaseUrl();
-  const res = await fetch(`${cleanBase}/products/${slug}`, { method: 'GET' });
+  
+  // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+  const rawUrl = `${cleanBase}/products/${slug}`;
+  const fetchUrl = appendAntiCacheParam(rawUrl);
+  const headers = getAntiCacheHeaders();
+
+  const res = await fetch(fetchUrl, { method: 'GET', headers });
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   
   const body = await res.json();
@@ -148,7 +180,13 @@ export async function fetchProductBySlug(slug: string): Promise<ProductItem> {
 // 🌟 Review Sliders API Fetcher
 export async function fetchReviewSliders(): Promise<ReviewSliderItem[]> {
   const cleanBase = getApiBaseUrl();
-  const res = await fetch(`${cleanBase}/review-sliders`, { method: 'GET' });
+  
+  // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
+  const rawUrl = `${cleanBase}/review-sliders`;
+  const fetchUrl = appendAntiCacheParam(rawUrl);
+  const headers = getAntiCacheHeaders();
+
+  const res = await fetch(fetchUrl, { method: 'GET', headers });
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
   const resBody = await res.json();

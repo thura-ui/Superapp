@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Clock, ChevronDown } from 'lucide-react';
 import {
   fetchProductsPaginated,
   type ApiPaginationMeta,
   type ProductItem,
 } from '../lib/productsApi';
 import type { Country, Screen } from '../types';
-import { useTranslation } from 'react-i18next'; // 🌟 i18next မှ useTranslation ကို import လုပ်ထားပါသည်
+import { useTranslation } from 'react-i18next';
 
 interface CountrySelectionProps {
   onBack: () => void;
@@ -29,6 +29,7 @@ interface Region {
   country_count: number;
   secondary_cover_image?: string;
   flag_image?: string;
+  startingPrice: number; // 🔴 Price Interface ထည့်သွင်းခြင်း
 }
 
 interface ProductWithVariation {
@@ -38,7 +39,112 @@ interface ProductWithVariation {
   flag_image?: string;
   type: string;
   startingPrice: number;
+  isComingSoon?: boolean;
 }
+
+const COMING_SOON_COUNTRIES: { name: string; code: string }[] = [
+  { name: 'Aland Islands', code: 'ax' },
+  { name: 'Albania', code: 'al' },
+  { name: 'Andorra', code: 'ad' },
+  { name: 'Anguilla', code: 'ai' },
+  { name: 'Antigua and Barbuda', code: 'ag' },
+  { name: 'Argentina', code: 'ar' },
+  { name: 'Azerbaijan', code: 'az' },
+  { name: 'Bahamas', code: 'bs' },
+  { name: 'Bahrain', code: 'bh' },
+  { name: 'Bangladesh', code: 'bd' },
+  { name: 'Barbados', code: 'bb' },
+  { name: 'Belize City', code: 'bz' },
+  { name: 'Benin', code: 'bj' },
+  { name: 'Bolivia', code: 'bo' },
+  { name: 'Botswana', code: 'bw' },
+  { name: 'Bosnia and Herzegovina', code: 'ba' },
+  { name: 'Brunei Darussalam', code: 'bn' },
+  { name: 'Burkina Faso', code: 'bf' },
+  { name: 'Cameroon', code: 'cm' },
+  { name: 'Cayman Islands', code: 'ky' },
+  { name: 'Central African Republic', code: 'cf' },
+  { name: 'Chad', code: 'td' },
+  { name: 'Chile', code: 'cl' },
+  { name: 'Columbia', code: 'co' },
+  { name: 'Congo', code: 'cg' },
+  { name: 'Costa Rica', code: 'cr' },
+  { name: "Cote D'Ivoire", code: 'ci' },
+  { name: 'Curacao', code: 'cw' },
+  { name: 'Democratic Republic of Congo', code: 'cd' },
+  { name: 'Dominican Republic', code: 'do' },
+  { name: 'Ecuador', code: 'ec' },
+  { name: 'El Salvador', code: 'sv' },
+  { name: 'France', code: 'fr' },
+  { name: 'French Guiana', code: 'gf' },
+  { name: 'Gabon', code: 'ga' },
+  { name: 'Georgia', code: 'ge' },
+  { name: 'Germany', code: 'de' },
+  { name: 'Ghana', code: 'gh' },
+  { name: 'Gibraltar (UK)', code: 'gi' },
+  { name: 'Grenada', code: 'gd' },
+  { name: 'Guam', code: 'gu' },
+  { name: 'Guernsey', code: 'gg' },
+  { name: 'Guinea-Bissau', code: 'gw' },
+  { name: 'Guyana', code: 'gy' },
+  { name: 'Honduras', code: 'hn' },
+  { name: 'Iraq', code: 'iq' },
+  { name: 'Jamaica', code: 'jm' },
+  { name: 'Jersey', code: 'je' },
+  { name: 'Jordan', code: 'jo' },
+  { name: 'Kazakhstan', code: 'kz' },
+  { name: 'Kenya', code: 'ke' },
+  { name: 'Kuwait', code: 'kw' },
+  { name: 'Kyrgyzstan', code: 'kg' },
+  { name: 'Laos', code: 'la' },
+  { name: 'Liberia', code: 'lr' },
+  { name: 'Macedonia', code: 'mk' },
+  { name: 'Madagascar', code: 'mg' },
+  { name: 'Malawi', code: 'mw' },
+  { name: 'Maldives', code: 'mv' },
+  { name: 'Mali', code: 'ml' },
+  { name: 'Martinique Island', code: 'mq' },
+  { name: 'Mauritius', code: 'mu' },
+  { name: 'Moldova', code: 'md' },
+  { name: 'Monaco', code: 'mc' },
+  { name: 'Mongolia', code: 'mn' },
+  { name: 'Morocco', code: 'ma' },
+  { name: 'Nicaragua', code: 'ni' },
+  { name: 'Niger', code: 'ne' },
+  { name: 'Nigeria', code: 'ng' },
+  { name: 'Oman', code: 'om' },
+  { name: 'Pakistan', code: 'pk' },
+  { name: 'Panama', code: 'pa' },
+  { name: 'Paraguay', code: 'py' },
+  { name: 'Peru', code: 'pe' },
+  { name: 'Puerto Rico', code: 'pr' },
+  { name: 'Qatar', code: 'qa' },
+  { name: 'Republic of Montenegro', code: 'me' },
+  { name: 'Reunion', code: 're' },
+  { name: 'Rwanda', code: 'rw' },
+  { name: 'Saint Lucia', code: 'lc' },
+  { name: 'Saint Vincent and the Grenadines', code: 'vc' },
+  { name: 'Saudi Arabia', code: 'sa' },
+  { name: 'Senegal', code: 'sn' },
+  { name: 'Serbia', code: 'rs' },
+  { name: 'Seychelles', code: 'sc' },
+  { name: 'South Africa', code: 'za' },
+  { name: 'Sri Lanka', code: 'lk' },
+  { name: 'St. Kitts and Nevis', code: 'kn' },
+  { name: 'Suriname', code: 'sr' },
+  { name: 'Swaziland', code: 'sz' },
+  { name: 'Tanzania', code: 'tz' },
+  { name: 'Trinidad and Tobago', code: 'tt' },
+  { name: 'Dominica', code: 'dm' },
+  { name: 'Tunisia', code: 'tn' },
+  { name: 'Turks and Caicos', code: 'tc' },
+  { name: 'Uganda', code: 'ug' },
+  { name: 'Ukraine', code: 'ua' },
+  { name: 'Uruguay', code: 'uy' },
+  { name: 'Uzbekistan', code: 'uz' },
+  { name: 'Virgin Islands (UK)', code: 'vg' },
+  { name: 'Zambia', code: 'zm' }
+];
 
 const normalizeApiType = (value?: string) => (value || '').trim().toLowerCase();
 
@@ -101,8 +207,8 @@ const normalizePaginationLabel = (label: string) => {
 };
 
 const PAGE_SIZE_OPTIONS = [
-  { label: '12', value: 12 },
-  { label: 'All', value: 220 }
+  { label: 'Per page 12', value: 12 },
+  { label: 'Per page All', value: 220 }
 ] as const;
 
 const resolveStartingPrice = (product: ProductItem): number => {
@@ -140,12 +246,13 @@ const mapCountryProducts = (products: ProductItem[]): ProductWithVariation[] => 
       flag_image: product.flag_image,
       type: mappedType,
       startingPrice: resolveStartingPrice(product),
+      isComingSoon: false
     };
   });
 };
 
 const mapProductsToRegions = (products: ProductItem[]): Region[] => {
-  return products.map((product) => ({
+  const mapped = products.map((product) => ({
     id: product.slug,
     name: product.name,
     code: 'REG',
@@ -153,7 +260,22 @@ const mapProductsToRegions = (products: ProductItem[]): Region[] => {
     country_count: extractCountryCountFromDescription(product.description),
     secondary_cover_image: product.secondary_cover_image,
     flag_image: product.flag_image,
+    startingPrice: resolveStartingPrice(product), // 🔴 Regional / Global အတွက် စျေးနှုန်းတွက်ထုတ်ခြင်း
   }));
+
+  const popularRegionSlugs = ['sg-my-th-3', 'sea-5', 'europe-33', 'asia-11'];
+
+  mapped.sort((a, b) => {
+    const indexA = popularRegionSlugs.indexOf(a.id);
+    const indexB = popularRegionSlugs.indexOf(b.id);
+
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return 0;
+  });
+
+  return mapped;
 };
 
 const getStartingTab = (tab?: string): 'country' | 'regional' | 'global' => {
@@ -162,10 +284,84 @@ const getStartingTab = (tab?: string): 'country' | 'regional' | 'global' => {
   return 'country';
 };
 
-export default function CountrySelection({ onSelectCountry, onSelectRegion, openAllCountries, onOpenAllCountriesHandled, initialTab }: CountrySelectionProps) {
+const CustomSelect = ({ 
+  value, 
+  options, 
+  onChange,
+  buttonClassName
+}: { 
+  value: number, 
+  options: readonly { label: string, value: number }[], 
+  onChange: (val: number) => void,
+  buttonClassName?: string
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  return (
+    <div ref={wrapperRef} className="relative inline-block text-left">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center justify-between gap-2 bg-white border border-solid rounded-xl focus:outline-none transition-all cursor-pointer font-['Poppins'] select-none ${
+          isOpen ? 'border-blue-400 ring-2 ring-blue-100 text-blue-600' : 'border-slate-200 text-slate-800 hover:border-blue-300 hover:text-blue-600 hover:bg-slate-50'
+        } ${buttonClassName}`}
+      >
+        <span className="truncate">{selectedOption.label}</span>
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : 'text-slate-500'}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 sm:left-auto sm:right-0 top-[calc(100%+8px)] z-50 w-36 bg-white border border-solid border-slate-200 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.08)] overflow-hidden flex flex-col font-['Poppins']">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`px-4 py-3 text-[12px] sm:text-[13px] text-left transition-colors w-full cursor-pointer ${
+                value === option.value 
+                  ? 'bg-blue-50 text-blue-600 font-bold' 
+                  : 'text-slate-700 font-semibold hover:bg-slate-50 hover:text-blue-600'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function CountrySelection({ onSelectCountry, openAllCountries, onOpenAllCountriesHandled, initialTab }: CountrySelectionProps) {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'country' | 'regional' | 'global'>(getStartingTab(initialTab));
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(getStartingTab(initialTab));
+    }
+  }, [initialTab]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [pageSize, setPageSize] = useState<number>(12);
@@ -181,12 +377,6 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
   const [globalPage, setGlobalPage] = useState(1);
 
   const lastFetchTrackerRef = useRef<string>('');
-
-  useEffect(() => {
-    if (initialTab) {
-      setActiveTab(getStartingTab(initialTab));
-    }
-  }, [initialTab]);
 
   useEffect(() => {
     if (openAllCountries) {
@@ -224,7 +414,10 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
       const typeFilter: 'country' | 'region' = activeTab === 'country' ? 'country' : 'region';
       const cleanSearch = debouncedSearchQuery.trim();
 
-      const currentFetchKey = `${activeTab}_${pageToLoad}_${pageSize}_${cleanSearch}`;
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+      const effectivePerPage = isMobile ? 220 : pageSize;
+
+      const currentFetchKey = `${activeTab}_${pageToLoad}_${effectivePerPage}_${cleanSearch}`;
       if (lastFetchTrackerRef.current === currentFetchKey) {
         return;
       }
@@ -234,15 +427,39 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
       try {
         const response = await fetchProductsPaginated({
           type: typeFilter,
-          perPage: pageSize,
-          page: pageToLoad,
+          perPage: effectivePerPage,
+          page: isMobile ? 1 : pageToLoad,
           search: cleanSearch ? cleanSearch : undefined,
         });
 
         if (disposed) return;
 
         if (activeTab === 'country') {
-          setAllCountries(mapCountryProducts(response.items));
+          const apiCountries = mapCountryProducts(response.items);
+          const existingNames = new Set(apiCountries.map(c => c.name.toLowerCase()));
+
+          const isAllSelected = effectivePerPage >= 220;
+          const isLastPage = response.meta ? response.meta.current_page === response.meta.last_page : true;
+          const shouldShowComingSoon = isAllSelected || isLastPage || cleanSearch.length > 0;
+
+          let filteredComingSoon: ProductWithVariation[] = [];
+
+          if (shouldShowComingSoon) {
+            filteredComingSoon = COMING_SOON_COUNTRIES
+              .filter(c => !existingNames.has(c.name.toLowerCase()))
+              .filter(c => !cleanSearch || c.name.toLowerCase().includes(cleanSearch.toLowerCase()))
+              .map(c => ({
+                id: `coming-soon-${c.code}`,
+                name: c.name,
+                code: c.code.toUpperCase(),
+                flag_image: `https://flagcdn.com/w160/${c.code}.png`,
+                type: 'local',
+                startingPrice: 0,
+                isComingSoon: true,
+              }));
+          }
+
+          setAllCountries([...apiCountries, ...filteredComingSoon]);
           setCountryMeta(response.meta);
         }
 
@@ -258,7 +475,12 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
           const pureGlobalProducts = response.items.filter(
             (item) => item.name.toLowerCase().includes('global')
           );
-          setGlobalPackages(mapProductsToRegions(pureGlobalProducts));
+
+          const mappedGlobal = mapProductsToRegions(pureGlobalProducts).sort((a, b) => {
+            return a.country_count - b.country_count;
+          });
+
+          setGlobalPackages(mappedGlobal);
           setGlobalMeta(response.meta);
         }
       } catch (error) {
@@ -307,25 +529,17 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
     }
 
     return (
-      <div className="mt-8 w-full font-['Poppins']">
-        {/* Web View Pagination */}
-        <div className="hidden sm:flex flex-wrap items-center justify-end gap-2 select-none">
-          <label className="flex items-center gap-2 bg-white border border-solid border-slate-200 rounded-xl px-3 py-2 font-semibold text-xs lg:text-[13px] text-slate-800">
-            <span>{t('perPage')}</span>
-            <select 
-              value={pageSize} 
-              onChange={(e) => {
-                const newSize = Number(e.target.value);
-                setPageSize(newSize);
-                setPage(1);
-              }} 
-              className="bg-transparent text-slate-900 font-semibold focus:outline-none cursor-pointer font-['Poppins']"
-            >
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
+      <div className="mt-8 w-full font-['Poppins'] relative hidden sm:block">
+        <div className="flex flex-wrap items-center justify-end gap-2 select-none">
+          <CustomSelect 
+            value={pageSize} 
+            options={PAGE_SIZE_OPTIONS} 
+            onChange={(newSize) => { 
+              setPageSize(newSize); 
+              setPage(1); 
+            }}
+            buttonClassName="px-4 py-2 font-semibold text-xs lg:text-[13px] w-[136px]"
+          />
 
           {showPageNumbers && meta.links.map((link, index) => {
             const pageNumber = link.page;
@@ -338,58 +552,10 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                 disabled={disabled || isActive} 
                 onClick={() => { if (pageNumber !== null) setPage(pageNumber); }} 
                 className={`px-3.5 py-2 rounded-xl font-semibold text-xs lg:text-[13px] border border-solid transition-all cursor-pointer font-['Poppins'] ${
-                  isActive ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
-                } ${disabled ? 'opacity-40 cursor-not-allowed hover:bg-white' : ''}`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Mobile View Pagination */}
-        <div className="flex sm:hidden flex-row flex-nowrap items-center justify-center gap-1.5 w-full select-none">
-          <label className="flex items-center gap-1 bg-white border border-solid border-slate-200 rounded-xl px-2 py-2 text-[11px] font-semibold text-slate-800 shrink-0">
-            <span>{t('perPage')}</span>
-            <select 
-              value={pageSize} 
-              onChange={(e) => {
-                const newSize = Number(e.target.value);
-                setPageSize(newSize);
-                setPage(1);
-              }} 
-              className="bg-transparent text-slate-900 font-semibold focus:outline-none cursor-pointer text-[11px] font-['Poppins']"
-            >
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-
-          {showPageNumbers && meta.links.map((link, index) => {
-            const pageNumber = link.page;
-            const disabled = pageNumber === null;
-            const isActive = link.active;
-            let label = normalizePaginationLabel(link.label);
-
-            if (label.toLowerCase().includes('previous')) label = '«';
-            if (label.toLowerCase().includes('next')) label = '»';
-
-            const isNumeric = /^\d+$/.test(label);
-            if (isNumeric && Number(label) > 3) {
-              return null; 
-            }
-
-            return (
-              <button 
-                key={`mobile-${label}-${index}`} 
-                disabled={disabled || isActive} 
-                onClick={() => { if (pageNumber !== null) setPage(pageNumber); }} 
-                className={`px-3 py-2 rounded-xl text-[11px] font-semibold border border-solid transition-all cursor-pointer shrink-0 font-['Poppins'] ${
                   isActive 
-                    ? 'bg-cyan-600 text-white border-cyan-600 shadow-sm' 
-                    : 'bg-white text-slate-800 border-slate-200'
-                } ${disabled ? 'opacity-40 cursor-not-allowed bg-slate-50 text-slate-400' : ''}`}
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-[0_6px_18px_rgba(37,99,235,0.35)] scale-105' 
+                    : 'bg-white text-slate-800 border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                } ${disabled ? 'opacity-40 cursor-not-allowed hover:bg-white' : ''}`}
               >
                 {label}
               </button>
@@ -401,10 +567,9 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
   };
 
   return (
-    <div className="w-full py-8 font-['Poppins'] text-slate-900">
+    <div className="mobile-typography-fix w-full pt-20 sm:pt-28 pb-20 sm:pb-28 font-['Poppins'] text-slate-900">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h1 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight font-['Poppins']">
             {t('travelEsimPlans')}
@@ -424,7 +589,6 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
           </div>
         </div>
 
-        {/* Tab Selection */}
         <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 mb-8 select-none">
           {tabs.map(tab => {
             const isActive = activeTab === tab.key;
@@ -435,7 +599,7 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                 className={`px-5 py-2.5 rounded-xl font-semibold text-xs lg:text-[13px] tracking-wide transition-all border border-solid cursor-pointer whitespace-nowrap relative font-['Poppins'] ${
                   isActive
                     ? 'bg-blue-600 text-white border-blue-600 shadow-[0_8px_20px_rgba(37,99,235,0.25)] scale-[1.03]'
-                    : 'bg-transparent text-slate-800 border-transparent hover:text-slate-900 hover:bg-slate-50'
+                    : 'bg-white text-slate-800 border-blue-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50'
                 }`}
               >
                 {tab.label}
@@ -444,55 +608,77 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
           })}
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-cyan-500 border-t-transparent" />
           </div>
         )}
 
-        {/* Country Tab View */}
         {!loading && activeTab === 'country' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {allCountries.length === 0 ? (
                 <div className="col-span-full text-center py-16 text-slate-900 font-semibold text-xs lg:text-[13px] font-['Poppins']">{t('noDestinationsFound')}</div>
               ) : (
-                allCountries.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => onSelectCountry({ id: item.id, name: item.name, code: item.code, flagUrl: item.flag_image, type: 'local', popular: false }, 'all')}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        onSelectCountry({ id: item.id, name: item.name, code: item.code, flagUrl: item.flag_image, type: 'local', popular: false }, 'all');
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    className="group flex flex-row items-center bg-white border border-solid border-blue-500 rounded-2xl p-3.5 sm:p-4 transition-all duration-300 hover:scale-[1.02] hover:border-blue-600 shadow-[0_8px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.2)] cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {renderFlagAvatar(item.flag_image, item.name, getFlagEmoji(item.code))}
-                      <div className="flex flex-col min-w-0 flex-1 space-y-0.5 text-left">
-                        <span className="font-semibold text-slate-900 text-sm sm:text-[15px] truncate tracking-tight font-['Poppins']">
-                          {item.name}
-                        </span>
-                        <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap no-underline decoration-0">
-                          {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px] whitespace-nowrap no-underline decoration-0">Ks {item.startingPrice.toLocaleString('en-US')}</span>
-                        </p>
-                        <p className="text-[9px] sm:text-[10px] text-slate-600 font-semibold font-['Poppins']">{t('tapToViewPlanDetails')}</p>
+                allCountries.map(item => {
+                  if (item.isComingSoon) {
+                    return (
+                      <div
+                        key={item.id}
+                        className="group flex flex-row items-center bg-slate-50/80 border border-dashed border-slate-300 rounded-2xl p-3.5 sm:p-4 opacity-75 cursor-not-allowed select-none"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          {renderFlagAvatar(item.flag_image, item.name, getFlagEmoji(item.code))}
+                          <div className="flex flex-col min-w-0 flex-1 space-y-0.5 text-left">
+                            <span className="font-semibold text-slate-700 text-sm sm:text-[15px] truncate tracking-tight font-['Poppins']">
+                              {item.name}
+                            </span>
+                            <div className="flex items-center gap-1 text-amber-600 text-[10px] font-bold mt-1">
+                              <Clock className="w-3 h-3" />
+                              <span>Coming Soon</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => onSelectCountry({ id: item.id, name: item.name, code: item.code, flagUrl: item.flag_image, type: 'local', popular: false }, 'all')}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onSelectCountry({ id: item.id, name: item.name, code: item.code, flagUrl: item.flag_image, type: 'local', popular: false }, 'all');
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className="group flex flex-row items-center bg-white border border-solid border-blue-500 rounded-2xl p-3.5 sm:p-4 transition-all duration-300 hover:scale-[1.02] hover:border-blue-600 shadow-[0_8px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.2)] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {renderFlagAvatar(item.flag_image, item.name, getFlagEmoji(item.code))}
+                        <div className="flex flex-col min-w-0 flex-1 space-y-0.5 text-left">
+                          <span className="font-semibold text-slate-900 text-sm sm:text-[15px] truncate tracking-tight font-['Poppins']">
+                            {item.name}
+                          </span>
+                          <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap no-underline decoration-0">
+                            {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px] whitespace-nowrap no-underline decoration-0">MMK {item.startingPrice.toLocaleString('en-US')}</span>
+                          </p>
+                          <p className="text-[9px] sm:text-[10px] text-slate-600 font-semibold font-['Poppins']">{t('tapToViewPlanDetails')}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
             {renderPaginationSection(countryMeta, setCountryPage, allCountries.length)}
           </>
         )}
 
-        {/* Regional Tab View */}
+        {/* 🌟 REGIONAL TAB (Starting from MMK price ကို ထည့်သွင်းပေးထားပါသည်) */}
         {!loading && activeTab === 'regional' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -502,11 +688,11 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                 regions.map(region => (
                   <div
                     key={region.id}
-                    onClick={() => onSelectRegion(region.id, region.name)}
+                    onClick={() => onSelectCountry({ id: region.id, name: region.name, code: 'REG', flagUrl: region.flag_image, type: 'regional', popular: false }, 'all')}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        onSelectRegion(region.id, region.name);
+                        onSelectCountry({ id: region.id, name: region.name, code: 'REG', flagUrl: region.flag_image, type: 'regional', popular: false }, 'all');
                       }
                     }}
                     role="button"
@@ -527,15 +713,21 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                       <div className="flex items-center gap-3 mb-3">
                         {renderFlagAvatar(region.flag_image, region.name, 'R')}
                         <div className="min-w-0 flex-1 text-left">
-                          <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900 mb-0.5 truncate tracking-tight font-['Poppins']">
+                          <h5 className="text-[11px] sm:text-sm font-semibold text-slate-900 mb-0.5 truncate tracking-tight font-['Poppins'] m-0">
                             {region.name}
-                          </h3>
-                          {region.country_count > 0 && (
-                            <p className="text-slate-800 text-[11px] font-semibold font-['Poppins']">{region.country_count} {t('countries')}</p>
-                          )}
+                          </h5>
+                          
+                          {/* 🔴 Starting Price ဖော်ပြခြင်း 🔴 */}
+                          {region.startingPrice > 0 ? (
+                            <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap m-0">
+                              {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px]">MMK {region.startingPrice.toLocaleString('en-US')}</span>
+                            </p>
+                          ) : region.country_count > 0 ? (
+                            <p className="text-slate-800 text-[10px] sm:text-[11px] font-semibold font-['Poppins'] m-0">{region.country_count} {t('countries')}</p>
+                          ) : null}
                         </div>
                       </div>
-                      <p className="text-[10px] text-slate-600 font-semibold text-left mt-1 font-['Poppins']">{t('tapToViewPlanDetails')}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-600 font-semibold text-left mt-1 font-['Poppins'] m-0">{t('tapToViewPlanDetails')}</p>
                     </div>
                   </div>
                 ))
@@ -545,7 +737,7 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
           </>
         )}
 
-        {/* Global Tab View */}
+        {/* 🌟 GLOBAL TAB (Starting from MMK price ကို ထည့်သွင်းပေးထားပါသည်) */}
         {!loading && activeTab === 'global' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -555,11 +747,11 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                 globalPackages.map(pkg => (
                   <div
                     key={pkg.id}
-                    onClick={() => onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', type: 'global', popular: false }, 'all')}
+                    onClick={() => onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', flagUrl: pkg.flag_image, type: 'global', popular: false }, 'all')}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', type: 'global', popular: false }, 'all');
+                        onSelectCountry({ id: pkg.id, name: pkg.name, code: 'GLB', flagUrl: pkg.flag_image, type: 'global', popular: false }, 'all');
                       }
                     }}
                     role="button"
@@ -580,15 +772,21 @@ export default function CountrySelection({ onSelectCountry, onSelectRegion, open
                       <div className="flex items-center gap-3 mb-3">
                         {renderFlagAvatar(pkg.flag_image, pkg.name, 'G')}
                         <div className="min-w-0 flex-1 text-left">
-                          <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900 mb-0.5 truncate tracking-tight font-['Poppins']">
+                          <h5 className="text-[11px] sm:text-sm font-semibold text-slate-900 mb-0.5 truncate tracking-tight font-['Poppins'] m-0">
                             {pkg.name}
-                          </h3>
-                          {pkg.country_count > 0 && (
-                            <p className="text-slate-800 text-[11px] font-semibold font-['Poppins']">{pkg.country_count} {t('countriesCovered')}</p>
-                          )}
+                          </h5>
+                          
+                          {/* 🔴 Starting Price ဖော်ပြခြင်း 🔴 */}
+                          {pkg.startingPrice > 0 ? (
+                            <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap m-0">
+                              {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px]">MMK {pkg.startingPrice.toLocaleString('en-US')}</span>
+                            </p>
+                          ) : pkg.country_count > 0 ? (
+                            <p className="text-slate-800 text-[10px] sm:text-[11px] font-semibold font-['Poppins'] m-0">{pkg.country_count} {t('countriesCovered')}</p>
+                          ) : null}
                         </div>
                       </div>
-                      <p className="text-[10px] text-slate-600 font-semibold text-left mt-1 font-['Poppins']">{t('tapToViewPlanDetails')}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-600 font-semibold text-left mt-1 font-['Poppins'] m-0">{t('tapToViewPlanDetails')}</p>
                     </div>
                   </div>
                 ))

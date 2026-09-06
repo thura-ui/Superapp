@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Phone, Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import { register, login, forgotPasswordApi } from '../lib/authApi';
@@ -29,9 +29,65 @@ export default function AccountAuth({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 🌟 Login မှားယွင်းမှု အကြိမ်အရေအတွက်နှင့် အတိအကျ ၃ ကြိမ်မြောက်မှ ပိတ်မည့် State များ
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTimer, setLockoutTimer] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  // 🌟 Modal ပွင့်နေချိန်တွင် Navbar နှင့် Footer များကို အလိုအလျောက် ပုန်းဖျောက်ပေးမည့် Effect
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const elementsToHide = document.querySelectorAll<HTMLElement>('header, nav, footer, [data-floating-chat]');
+    
+    const originalDisplays: string[] = [];
+    elementsToHide.forEach((el, index) => {
+      originalDisplays[index] = el.style.display;
+      el.style.display = 'none';
+    });
+
+    return () => {
+      elementsToHide.forEach((el, index) => {
+        el.style.display = originalDisplays[index] || '';
+      });
+    };
+  }, [isOpen]);
+
+  // 🌟 3 Seconds Countdown ထိန်းချုပ်မည့် Effect (၃ ကြိမ်မြောက်မှသာ အလုပ်လုပ်မည်)
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (lockoutTimer) {
+      const remaining = Math.ceil((lockoutTimer - Date.now()) / 1000);
+      if (remaining > 0) {
+        setCountdown(remaining);
+        timer = setInterval(() => {
+          const currentRemaining = Math.ceil((lockoutTimer - Date.now()) / 1000);
+          if (currentRemaining <= 0) {
+            setLockoutTimer(null);
+            setCountdown(0);
+            setFailedAttempts(0); // ၃ စက္ကန့် စောင့်ပြီးပါက အကြိမ်အရေအတွက် Reset ပြန်လုပ်ပေးမည်
+            clearInterval(timer);
+          } else {
+            setCountdown(currentRemaining);
+          }
+        }, 500);
+      } else {
+        setLockoutTimer(null);
+        setCountdown(0);
+        setFailedAttempts(0);
+      }
+    }
+    return () => clearInterval(timer);
+  }, [lockoutTimer]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // 🌟 စောင့်ဆိုင်းချိန် ၃ စက္ကန့် မပြည့်သေးပါက Submit ခလုတ်နှိပ်မရအောင် တားဆီးမည်
+    if (lockoutTimer && Date.now() < lockoutTimer) {
+      return;
+    }
 
     // FLOW ၁။ Forgot Password Request
     if (isForgotPassword) {
@@ -72,12 +128,26 @@ export default function AccountAuth({
         setIsSignUp(false);
       } else {
         await login({ email: email.trim().toLowerCase(), password });
+        // Login အောင်မြင်သွားပါက Failed attempts အားလုံး Reset လုပ်မည်
+        setFailedAttempts(0);
+        setLockoutTimer(null);
         showAlert('login-success', () => {
           onAuthSuccess(true);
         });
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+
+      // 🔴 အတိအကျ ၃ ကြိမ်မြောက် မှားမှသာ ၃ စက္ကန့် ခလုတ် ပိတ်ထားမည် 🔴
+      if (newAttempts >= 3) {
+        const lockDuration = 3000; // 3 seconds
+        setLockoutTimer(Date.now() + lockDuration);
+        setError('Too many failed attempts (3/3). Please wait 3 seconds.');
+      } else {
+        // ၁ ကြိမ် သို့မဟုတ် ၂ ကြိမ်မြောက်တွင် စောင့်ခိုင်းခြင်းမရှိဘဲ မည်မျှမှားယွင်းကြောင်း စာသားသာပြသမည်
+        setError(`${err.message || 'Authentication failed'} (${newAttempts}/3 attempts)`);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,22 +157,22 @@ export default function AccountAuth({
     setShowPassword(!showPassword);
   };
 
+  // 🔴 ခလုတ်အား Loading ဖြစ်ချိန် သို့မဟုတ် ၃ ကြိမ်မြောက်အမှားကြောင့် ၃ စက္ကန့် Countdown ပွင့်ချိန်မှသာ Disable လုပ်မည် 🔴
+  const isButtonDisabled = loading || (lockoutTimer !== null && Date.now() < lockoutTimer);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        /* z-[999] နှင့် items-center သုံးပြီး မျက်နှာပြင် အလယ်တည့်တည့်တွင် ပြသပေးထားသည် */
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 pointer-events-auto">
-          
-          {/* Backdrop Overlay */}
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+      
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onBack}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-white z-0"
           />
 
-          {/* Center Pop-up Modal */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -144,7 +214,7 @@ export default function AccountAuth({
                       <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required={isSignUp} />
                     </div>
                     
-                    {/* Phone Number with Default '09' */}
+                    {/* Phone Number */}
                     <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
                       <input 
@@ -170,7 +240,14 @@ export default function AccountAuth({
                   <>
                     <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
-                      <input type={showPassword ? 'text' : 'password'} placeholder={isSignUp ? "New Password" : "Password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required />
+                      <input 
+                        type={showPassword ? 'text' : 'password'} 
+                        placeholder={isSignUp ? "New Password" : "Password"} 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
+                        required 
+                      />
                       <button type="button" onClick={togglePasswordVisibility} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-sky-500 group-focus-within:text-blue-600 cursor-pointer bg-transparent border-none">
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
@@ -185,7 +262,14 @@ export default function AccountAuth({
                     {isSignUp && (
                       <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
-                        <input type={showPassword ? 'text' : 'password'} placeholder="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required />
+                        <input 
+                          type={showPassword ? 'text' : 'password'} 
+                          placeholder="Confirm New Password" 
+                          value={confirmPassword} 
+                          onChange={(e) => setConfirmPassword(e.target.value)} 
+                          className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
+                          required 
+                        />
                       </div>
                     )}
                   </>
@@ -193,14 +277,22 @@ export default function AccountAuth({
 
                 {/* Submit Button */}
                 <motion.button 
-                  whileTap={{ scale: 0.98 }} 
+                  whileTap={{ scale: isButtonDisabled ? 1 : 0.98 }} 
                   type="submit" 
-                  disabled={loading} 
-                  className="w-full relative overflow-hidden py-4 rounded-2xl sm:rounded-3xl shadow-[0_8px_25px_rgba(37,99,235,0.3)] group/btn disabled:opacity-40 cursor-pointer border-none mt-4"
+                  disabled={isButtonDisabled} 
+                  className="w-full relative overflow-hidden py-4 rounded-2xl sm:rounded-3xl shadow-[0_8px_25px_rgba(37,99,235,0.3)] group/btn disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none mt-4"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 opacity-95 group-hover/btn:opacity-100 transition-opacity" />
                   <span className="relative z-10 text-white font-extrabold text-base tracking-[0.15em] uppercase">
-                    {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Sign Up' : 'Sign In'}
+                    {countdown > 0 
+                      ? `Please wait (${countdown}s)` 
+                      : loading 
+                      ? 'Processing...' 
+                      : isForgotPassword 
+                      ? 'Send Reset Link' 
+                      : isSignUp 
+                      ? 'Sign Up' 
+                      : 'Sign In'}
                   </span>
                 </motion.button>
               </form>

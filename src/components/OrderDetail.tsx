@@ -12,7 +12,9 @@ import {
   ShieldCheck,
   Calendar
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next'; // 🌟 i18next ကို import လုပ်ထားပါသည်
+import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
+import { fetchOrderDetailApi } from '../lib/ordersApi';
 
 interface OrderDetailProps {
   orderNumber?: string;
@@ -53,7 +55,7 @@ interface ProductVariation {
   price: number;
   effective_price: number;
   days: number;
-  data_plan: string;
+  data_plan: string; 
   plan_type: string;
   description: string;
   stock_status: string;
@@ -72,8 +74,8 @@ interface OrderItem {
   subtotal: number;
   tax_total: number;
   total: number;
-  product_variation: ProductVariation;
-  esims: ESim[];
+  product_variation?: ProductVariation | null;
+  esims?: ESim[];
 }
 
 interface OrderData {
@@ -98,11 +100,10 @@ interface OrderData {
 }
 
 export default function OrderDetail({ 
-  orderNumber = "SML-ORD-20260715-0008", 
+  orderNumber, 
   onBack, 
   onHelp 
 }: OrderDetailProps) {
-  // 🌟 Translation hook ကို ခေါ်ယူထားပါသည်
   const { t } = useTranslation();
 
   const [order, setOrder] = useState<OrderData | null>(null);
@@ -112,33 +113,18 @@ export default function OrderDetail({
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
+      if (!orderNumber) {
+        setLoading(false);
+        setError('Order number is required.');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       
       try {
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const response = await fetch(
-          `https://admin-sml.simless-mm.com/api/v1/orders/${orderNumber}`, 
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
-            }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to load order details (Status: ${response.status})`);
-        }
-
-        const json = await response.json();
-        setOrder(json.order || json.data || json);
+        const data = await fetchOrderDetailApi(orderNumber);
+        setOrder(data);
       } catch (err: any) {
         console.error('Order Detail Fetch Error:', err);
         setError(err.message || 'Unable to fetch order details.');
@@ -159,7 +145,8 @@ export default function OrderDetail({
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
-      return new Date(dateString).toLocaleString('en-US', {
+      const safeDateString = dateString.replace(' ', 'T');
+      return new Date(safeDateString).toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -171,269 +158,314 @@ export default function OrderDetail({
     }
   };
 
+  const isCancelled = order?.status?.toLowerCase() === 'cancelled' || order?.status?.toLowerCase() === 'failed';
+
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-24 relative selection:bg-blue-500/10 font-['Retro_Floral',sans-serif]">
+    <div className="min-h-screen bg-slate-50/60 pb-20 sm:pb-24 relative selection:bg-blue-500/10 font-['Poppins'] pt-[85px] sm:pt-[105px] mobile-typography-fix">
       
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[5%] right-[10%] w-[35%] h-[35%] bg-blue-500/5 rounded-full blur-[100px]" />
         <div className="absolute bottom-[10%] left-[5%] w-[30%] h-[30%] bg-teal-500/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
+      <div className="relative max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
         
-        <div className="flex items-center justify-between mb-6">
+        {/* Navigation Header Bar */}
+        <div className="flex items-center justify-between mb-4 sm:mb-8 pt-1 sm:pt-2">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black hover:bg-slate-50 transition-all shadow-sm cursor-pointer font-['Retro_Floral']"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-xs cursor-pointer font-['Poppins'] active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4 text-slate-500" />
-            <span>{t('backToOrders')}</span>
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />
+            <span>{t('backToOrders', 'Back to Orders')}</span>
           </button>
 
-          <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest font-['Retro_Floral']">
-            {t('orderDetail')}
+          <span className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider font-['Poppins']">
+            {t('orderDetail', 'Order Detail')}
           </span>
         </div>
 
         {loading && (
-          <div className="bg-white rounded-[32px] p-12 sm:p-20 border border-slate-100 shadow-sm flex flex-col items-center justify-center font-['Retro_Floral']">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-4"></div>
-            <p className="text-slate-400 font-black text-xs uppercase tracking-widest">{t('fetchingOrderInfo')}</p>
+          <div className="bg-white rounded-[20px] sm:rounded-[24px] p-8 sm:p-20 border border-slate-100 shadow-xs flex flex-col items-center justify-center font-['Poppins']">
+            <div className="animate-spin rounded-full h-7 w-7 sm:h-8 sm:w-8 border-3 sm:border-4 border-blue-600 border-t-transparent mb-3 sm:mb-4"></div>
+            <p className="text-slate-900 font-semibold text-xs sm:text-sm uppercase tracking-wider font-['Poppins']">{t('fetchingOrderInfo', 'Fetching Order Information...')}</p>
           </div>
         )}
 
         {error && !loading && (
-          <div className="bg-white rounded-[30px] p-10 border border-rose-100 shadow-sm text-center max-w-md mx-auto font-['Retro_Floral']">
-            <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-7 h-7" />
+          <div className="bg-white rounded-[20px] sm:rounded-[24px] p-6 sm:p-10 border border-rose-100 shadow-xs text-center max-w-md mx-auto font-['Poppins']">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h3 className="text-base font-black text-slate-900 mb-1">{t('errorLoadingOrder')}</h3>
-            <p className="text-xs text-slate-500 mb-6">{error}</p>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 mb-1">{t('errorLoadingOrder', 'Error Loading Order')}</h3>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium mb-5 sm:mb-6">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-sm hover:bg-blue-700 transition-all cursor-pointer font-['Retro_Floral']"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider shadow-xs hover:bg-blue-700 transition-all cursor-pointer font-['Poppins'] active:scale-95"
             >
-              {t('tryAgain')}
+              {t('tryAgain', 'Try Again')}
             </button>
           </div>
         )}
 
         {!loading && !error && order && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 font-['Poppins']">
             
-            <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_12px_30px_rgba(15,23,42,0.03)] space-y-6">
+            {/* Order Header Info Card */}
+            <div className="bg-white border border-slate-200/80 rounded-[20px] sm:rounded-[24px] p-4 sm:p-8 shadow-xs space-y-4 sm:space-y-6 font-['Poppins']">
               
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-4 sm:pb-6">
                 <div>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 font-mono tracking-tight whitespace-nowrap shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5 flex-wrap">
+                    <h3 className="text-sm sm:text-lg font-bold text-slate-900 tracking-tight whitespace-nowrap shrink-0 font-['Poppins']">
                       {order.order_number}
-                    </h1>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 font-['Retro_Floral'] ${
-                      order.status === 'completed' 
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
-                        : 'bg-amber-50 text-amber-600 border-amber-200'
+                    </h3>
+                    
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md text-[11px] sm:text-xs font-bold uppercase tracking-wider border shrink-0 font-['Poppins'] ${
+                      isCancelled
+                        ? 'bg-rose-50 text-rose-600 border-rose-200'
+                        : 'bg-blue-50 text-blue-600 border-blue-200'
                     }`}>
-                      {order.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
-                      {t(`status${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`, order.status)} 
+                      {isCancelled ? (
+                        <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-600" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                      )}
+                      {t(`status${order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : ''}`, order.status)} 
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 font-medium font-['Retro_Floral']">
-                    {t('placedOn')} <span className="text-slate-600 font-bold">{formatDate(order.placed_at)}</span>
+                  
+                  <p className="text-[11px] sm:text-sm text-slate-600 font-medium font-['Poppins']">
+                    {t('placedOn', 'Placed on')} <span className="text-slate-900 font-bold">{formatDate(order.placed_at)}</span>
                   </p>
                 </div>
 
-                <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 font-['Retro_Floral']">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('totalValuation')}</span>
-                  <span className="text-xl font-black text-blue-600 whitespace-nowrap">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-slate-100 pt-2.5 sm:pt-0 font-['Poppins']">
+                  <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('totalValuation', 'Total Valuation')}</span>
+                  <span className="text-sm sm:text-lg font-bold whitespace-nowrap font-['Poppins'] text-blue-600">
                     {order.total > 0 ? `${order.total.toLocaleString()} ${order.currency}` : `0 ${order.currency}`}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-100/80 text-xs font-['Retro_Floral']">
+              {/* Meta Data Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 bg-slate-50/70 p-3.5 sm:p-4 rounded-xl border border-slate-100/80 text-[11px] sm:text-sm font-['Poppins']">
+                
                 <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{t('paymentMethod')}</p>
-                  <p className="font-extrabold text-slate-800 uppercase mt-0.5 flex items-center gap-1">
-                    {order.payment_method === 'sparks' && <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
-                    {order.payment_method_title}
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('paymentMethod', 'Payment Method')}</p>
+                  <p className="font-bold uppercase mt-0.5 sm:mt-1 flex items-center gap-1 font-['Poppins'] text-blue-600">
+                    {order.payment_method === 'sparks' && <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-amber-500" />}
+                    {order.payment_method_title || order.payment_method || '-'}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{t('paymentStatus')}</p>
-                  <p className="font-extrabold text-emerald-600 uppercase mt-0.5">{order.payment_status}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('paymentStatus', 'Payment Status')}</p>
+                  <p className="font-bold uppercase mt-0.5 sm:mt-1 font-['Poppins'] text-blue-600">
+                    {order.payment_status || '-'}
+                  </p>
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{t('sparksUsed')}</p>
-                  <p className="font-extrabold text-amber-600 mt-0.5">{order.sparks_used} Sparks</p>
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('sparksUsed', 'Sparks Used')}</p>
+                  <p className="font-bold mt-0.5 sm:mt-1 font-['Poppins'] text-blue-600">
+                    {order.sparks_used || 0} Sparks
+                  </p>
                 </div>
 
-                <div className="col-span-2 sm:col-span-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{t('customerEmail')}</p>
-                  <p className="font-bold text-slate-700 mt-0.5 break-all">{order.customer_email}</p>
+                <div className="col-span-2 lg:col-span-2">
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('customerEmail', 'Customer Email')}</p>
+                  <p className="font-bold mt-0.5 sm:mt-1 truncate font-['Poppins'] text-blue-600">
+                    {order.customer_email || '-'}
+                  </p>
                 </div>
+
               </div>
 
             </div>
 
-            {order.items.map((item) => (
-              <div key={item.id} className="space-y-6">
-                
-                <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_12px_30px_rgba(15,23,42,0.03)] font-['Retro_Floral']">
+            {/* Order Items Section */}
+            {(order.items || []).map((item) => {
+              const variation = item.product_variation;
+              const esimsList = item.esims || [];
+              
+              const firstEsimValidTime = esimsList.length > 0 ? esimsList[0].esim_metadata?.validTime : null;
+
+              return (
+                <div key={item.id} className="space-y-4 sm:space-y-6">
                   
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-5">
-                    <div className="flex items-center gap-3.5">
-                      <img 
-                        src="/esim-icon_1.webp"
-                        alt="eSIM Icon" 
-                        className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0"
-                      />
-                      <div>
-                        <h2 className="text-lg sm:text-xl font-black text-slate-900">{item.name} {t('esimPlan')}</h2>
-                        <span className="text-xs font-extrabold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full inline-block mt-0.5">
-                          {item.product_variation.combination_label}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-1.5">
-                        <Wifi className="w-4 h-4 text-blue-600" />
-                        <span>{t('data')} <strong>{item.product_variation.data_plan}</strong></span>
-                      </div>
-                      <div className="w-px h-4 bg-slate-200" />
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4 text-blue-600" />
-                        <span>{t('validity')} <strong>{item.product_variation.days} {t('days')}</strong></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                    <p className="font-black text-slate-700 uppercase tracking-wider text-[10px] mb-1.5">{t('coverageAndDetails')}</p>
-                    <div 
-                      className="prose prose-xs max-w-none space-y-1 font-['Retro_Floral']"
-                      dangerouslySetInnerHTML={{ __html: item.product_variation.description }} 
-                    />
-                  </div>
-                </div>
-
-                {item.esims.map((esim, idx) => {
-                  return (
-                    <div key={idx} className="bg-white border border-blue-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_16px_35px_rgba(37,99,235,0.05)] space-y-6 font-['Retro_Floral']">
-                      
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <div className="flex items-center gap-2">
-                          <Smartphone className="w-5 h-5 text-blue-600" />
-                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
-                            {t('esimActivationProfile', { number: idx + 1 })}
-                          </h3>
+                  <div className="bg-white border border-slate-200/80 rounded-[20px] sm:rounded-[24px] p-4 sm:p-8 shadow-xs font-['Poppins']">
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-4 sm:pb-5 mb-4 sm:mb-5">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src="/esim-icon_1.png"
+                          alt="eSIM Icon" 
+                          className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"
+                        />
+                        <div>
+                          <h3 className="text-xs sm:text-base font-bold text-slate-900">{item.name} {t('esimPlan', 'eSIM Plan')}</h3>
+                          <span className="text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full inline-block mt-0.5 text-blue-600 bg-blue-50 border border-blue-100">
+                            {variation?.combination_label || 'Standard Package'}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                          {t('readyToInstall')}
-                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] sm:text-sm font-semibold text-slate-900 bg-slate-50 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-1.5 min-w-max">
+                          <Wifi className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                          <span>{t('data', 'Data:')} <strong className="font-bold">{variation?.data_plan || 'N/A'}</strong></span>
+                        </div>
+                        <div className="hidden sm:block w-px h-4 bg-slate-200" />
                         
-                        <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 border border-slate-200/70 p-6 rounded-2xl text-center">
-                          <div className="bg-white p-3.5 rounded-2xl shadow-md border border-slate-100 mb-3">
-                            <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(esim.esim_activation_code)}`} 
-                              alt="eSIM QR Code"
-                              className="w-40 h-40 object-contain" 
-                            />
+                        <div className="flex items-center gap-1.5 min-w-max">
+                          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                          <span>{t('validity', 'Validity:')} <strong className="font-bold">
+                            {firstEsimValidTime 
+                              ? formatDate(firstEsimValidTime) 
+                              : (variation?.days ? `${variation.days} ${t('days', 'Days')}` : 'N/A')}
+                          </strong></span>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {variation?.description && (
+                      <div className="text-[11px] sm:text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 sm:p-4 rounded-xl border border-slate-100">
+                        <p className="font-semibold text-slate-400 uppercase tracking-wider text-[10px] sm:text-xs mb-1">{t('coverageAndDetails', 'Coverage & Details')}</p>
+                        <div 
+                          className="prose prose-sm max-w-none space-y-1 font-['Poppins'] text-[11px] sm:text-sm font-medium text-slate-800"
+                          dangerouslySetInnerHTML={{ __html: variation.description }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* eSIM Activation Profiles */}
+                  {esimsList.map((esim, idx) => {
+                    return (
+                      <div key={idx} className="bg-white border border-slate-200/80 rounded-[20px] sm:rounded-[24px] p-4 sm:p-8 shadow-xs space-y-4 sm:space-y-6 font-['Poppins']">
+                        
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                            <h4 className="text-[13px] sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
+                              {t('esimActivationProfile', { number: idx + 1 })}
+                            </h4>
                           </div>
-                          <p className="text-[11px] font-black text-slate-800 flex items-center gap-1">
-                            <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                            {t('scanQrCode')}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                            {t('scanQrCodeDesc')}
-                          </p>
                         </div>
 
-                        <div className="lg:col-span-7 space-y-3.5">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
                           
-                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{t('esimIccid')}</p>
-                              <p className="text-xs font-black text-slate-800 font-mono truncate">{esim.esim_iccid}</p>
+                          <div className="lg:col-span-5 flex flex-col items-center justify-center bg-slate-50 border border-slate-200/70 p-4 sm:p-5 rounded-xl text-center">
+                            <div className="bg-white p-2.5 sm:p-3 rounded-xl shadow-xs border border-slate-100 mb-2.5 sm:mb-3">
+                              {esim.esim_activation_code ? (
+                                <QRCodeSVG 
+                                  value={esim.esim_activation_code} 
+                                  size={140}
+                                  bgColor={"#FFFFFF"}
+                                  fgColor={"#0F172A"}
+                                  level={"M"}
+                                  className="w-28 h-28 sm:w-36 sm:h-36"
+                                />
+                              ) : (
+                                <div className="w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center text-xs text-slate-400 font-semibold">
+                                  No QR Code Available
+                                </div>
+                              )}
                             </div>
-                            <button
-                              onClick={() => copyToClipboard(esim.esim_iccid, 'iccid')}
-                              className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-blue-600 text-xs font-bold shrink-0 flex items-center gap-1 transition-all cursor-pointer font-['Retro_Floral']"
-                            >
-                              {copiedField === 'iccid' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              <span>{copiedField === 'iccid' ? t('copied') : t('copy')}</span>
-                            </button>
+                            <p className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
+                              <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                              {t('scanQrCode', 'Scan QR Code to Install')}
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">
+                              {t('scanQrCodeDesc', 'Go to Settings > Cellular > Add eSIM on your device')}
+                            </p>
                           </div>
 
-                          <div className="flex flex-col gap-2 pt-1 text-[11px]">
-                            <div className="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100/60">
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">{t('apnSetting')}</span>
-                              <p className="font-extrabold text-blue-700">{esim.esim_metadata.apn}</p>
+                          <div className="lg:col-span-7 space-y-2.5 sm:space-y-3">
+                            
+                            <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100 flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('esimIccid', 'eSIM ICCID')}</p>
+                                <p className="text-xs sm:text-sm font-bold text-slate-900 font-mono truncate">{esim.esim_iccid || '-'}</p>
+                              </div>
+                              {esim.esim_iccid && (
+                                <button
+                                  onClick={() => copyToClipboard(esim.esim_iccid, 'iccid')}
+                                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-white border border-slate-200 text-slate-900 hover:text-blue-600 text-[11px] sm:text-xs font-bold shrink-0 flex items-center gap-1 transition-all cursor-pointer font-['Poppins'] active:scale-95"
+                                >
+                                  {copiedField === 'iccid' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                                  <span>{copiedField === 'iccid' ? t('copied', 'Copied') : t('copy', 'Copy')}</span>
+                                </button>
+                              )}
                             </div>
-                            <div className="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100/60">
-                              <span className="text-[9px] font-bold text-slate-400 uppercase">{t('pinPuk')}</span>
-                              <p className="font-extrabold text-blue-700">{esim.esim_metadata.pin} / {esim.esim_metadata.puk}</p>
+
+                            <div className="flex flex-col gap-2 text-xs sm:text-sm">
+                              <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">{t('apnSetting', 'APN Setting')}</span>
+                                <p className="font-bold mt-0.5 text-blue-600">{esim.esim_metadata?.apn || 'cmhk'}</p>
+                              </div>
+                              <div className="bg-slate-50 p-2.5 sm:p-3 rounded-xl border border-slate-100">
+                                <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">{t('pinPuk', 'PIN / PUK')}</span>
+                                <p className="font-bold mt-0.5 text-blue-600">{esim.esim_metadata?.pin || '0000'} / {esim.esim_metadata?.puk || '00000000'}</p>
+                              </div>
                             </div>
+
                           </div>
 
                         </div>
 
                       </div>
+                    );
+                  })}
 
-                    </div>
-                  );
-                })}
+                </div>
+              );
+            })}
 
-              </div>
-            ))}
-
-            <div className="bg-white border border-slate-200/80 rounded-[28px] p-6 sm:p-8 shadow-[0_12px_30px_rgba(15,23,42,0.03)] space-y-4 font-['Retro_Floral']">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3">
-                {t('billingBreakdown')}
+            {/* Billing Breakdown */}
+            <div className="bg-white border border-slate-200/80 rounded-[20px] sm:rounded-[24px] p-4 sm:p-8 shadow-xs space-y-3 sm:space-y-4 font-['Poppins']">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2.5 sm:pb-3">
+                {t('billingBreakdown', 'Billing Breakdown')}
               </h3>
 
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between text-slate-500">
-                  <span>{t('subtotal')}</span>
-                  <span className="font-bold text-slate-800">{order.subtotal.toLocaleString()} {order.currency}</span>
+              <div className="space-y-2 text-xs sm:text-sm font-normal">
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span className="font-semibold text-slate-900">{t('subtotal', 'Subtotal')}</span>
+                  <span className="font-bold text-slate-900">{order.subtotal ? order.subtotal.toLocaleString() : 0} {order.currency || 'MMK'}</span>
                 </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>{t('discountTotal')}</span>
-                  <span className="font-bold text-emerald-600">-{order.discount_total.toLocaleString()} {order.currency}</span>
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span className="font-semibold text-slate-900">{t('discountTotal', 'Discount Total (Sparks)')}</span>
+                  <span className="font-bold text-emerald-600">-{order.discount_total ? order.discount_total.toLocaleString() : 0} {order.currency || 'MMK'}</span>
                 </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>{t('tax')}</span>
-                  <span className="font-bold text-slate-800">{order.tax_total} {order.currency}</span>
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span className="font-semibold text-slate-900">{t('tax', 'Tax')}</span>
+                  <span className="font-bold text-slate-900">{order.tax_total || 0} {order.currency || 'MMK'}</span>
                 </div>
-                <div className="border-t border-slate-100 pt-3 flex justify-between text-sm font-black text-slate-900">
-                  <span>{t('finalAmountPaid')}</span>
-                  <span className="text-blue-600">{order.total > 0 ? `${order.total.toLocaleString()} ${order.currency}` : `0 ${order.currency}`}</span>
+                <div className="border-t border-slate-100 pt-2.5 flex justify-between text-xs sm:text-sm font-bold text-slate-900">
+                  <span className="font-bold text-slate-900">{t('finalAmountPaid', 'Final Amount Paid')}</span>
+                  <span className="text-blue-600">{order.total > 0 ? `${order.total.toLocaleString()} ${order.currency || 'MMK'}` : `0 ${order.currency || 'MMK'}`}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-[28px] p-6 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg font-['Retro_Floral']">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-6 h-6 text-cyan-400" />
+            {/* Support Banner */}
+            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 text-white flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-sm font-['Poppins']">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black">{t('needHelpInstalling')}</h4>
-                  <p className="text-xs text-blue-200 font-medium mt-0.5">{t('needHelpInstallingDesc')}</p>
+                  <h4 className="text-xs sm:text-sm font-bold">{t('needHelpInstalling', 'Need Help Installing Your eSIM?')}</h4>
                 </div>
               </div>
 
               <button
                 onClick={onHelp}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white text-blue-900 font-black text-xs uppercase tracking-wider hover:bg-blue-50 transition-all cursor-pointer shrink-0 font-['Retro_Floral']"
+                className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white text-blue-900 font-bold text-xs sm:text-sm uppercase tracking-wider hover:bg-blue-50 transition-all cursor-pointer shrink-0 font-['Poppins'] active:scale-95"
               >
-                {t('getSupport')}
+                {t('getSupport', 'Get Support')}
               </button>
             </div>
 

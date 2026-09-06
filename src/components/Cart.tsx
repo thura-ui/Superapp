@@ -21,6 +21,7 @@ interface CartItem {
   quantity: number;
   days: number;
   currency: string;
+  packageTypeLabel: string;
 }
 
 interface CartData {
@@ -47,15 +48,48 @@ const normalizeCart = (payload: any): CartData => {
     (Array.isArray(payload?.cart_items) && payload.cart_items) ||
     [];
 
-  const items: CartItem[] = rawItems.map((item: any, index: number) => ({
-    id: toNumber(item?.id ?? item?.item_id ?? item?.cart_item_id, index + 1),
-    variation_id: toNumber(item?.variation_id ?? item?.id, index + 1),
-    name: String(item?.name ?? item?.product_name ?? item?.title ?? item?.variation_name ?? 'eSIM Plan'),
-    price: toNumber(item?.price ?? item?.unit_price ?? item?.effective_price, 0),
-    quantity: Math.max(1, toNumber(item?.quantity, 1)),
-    days: toNumber(item?.days ?? item?.validity_days ?? item?.duration_days, 0),
-    currency: String(item?.currency ?? payload?.currency ?? 'USD'),
-  }));
+  const items: CartItem[] = rawItems.map((item: any, index: number) => {
+    const rawName = String(item?.name ?? item?.product_name ?? item?.title ?? 'eSIM Plan');
+    const daysCount = toNumber(item?.days ?? item?.validity_days ?? item?.duration_days ?? item?.variation?.days, 0);
+
+    // 🔴 plan_type ကို API ရဲ့ နေရာစုံမှ ရှာယူခြင်း 🔴
+    const rawPlanType = String(
+      item?.plan_type ?? 
+      item?.variation?.plan_type ?? 
+      item?.variation_plan_type ?? 
+      item?.type ?? 
+      ''
+    ).toLowerCase().trim();
+
+    // LocalStorage မှ တိုက်ရိုက်ယူထားသော Label (Fallback)
+    const savedPackageLabel = localStorage.getItem('selected_package_label');
+
+    let packageTypeLabel = '';
+
+    // 🔴 plan_type အပေါ်မူတည်၍ Label ခွဲခြားခြင်း 🔴
+    if (rawPlanType === 'daypass' || rawPlanType === 'day_pass' || rawPlanType === 'daily') {
+      packageTypeLabel = daysCount > 0 ? `DAYPASS (${daysCount} DAYS)` : 'DAYPASS';
+    } else if (rawPlanType === 'unlimited') {
+      packageTypeLabel = daysCount > 0 ? `UNLIMITED (${daysCount} DAYS)` : 'UNLIMITED';
+    } else if (rawPlanType === 'fixed' || rawPlanType === 'bundle') {
+      packageTypeLabel = daysCount > 0 ? `${daysCount} DAYS FIXED BUNDLE` : 'FIXED BUNDLE';
+    } else if (savedPackageLabel) {
+      packageTypeLabel = savedPackageLabel;
+    } else {
+      packageTypeLabel = daysCount > 0 ? `${daysCount} DAYS FIXED BUNDLE` : 'FIXED BUNDLE';
+    }
+
+    return {
+      id: toNumber(item?.id ?? item?.item_id ?? item?.cart_item_id, index + 1),
+      variation_id: toNumber(item?.variation_id ?? item?.id, index + 1),
+      name: rawName,
+      price: toNumber(item?.price ?? item?.unit_price ?? item?.effective_price, 0),
+      quantity: Math.max(1, toNumber(item?.quantity, 1)),
+      days: daysCount,
+      currency: String(item?.currency ?? payload?.currency ?? 'MMK'),
+      packageTypeLabel,
+    };
+  });
 
   const subtotal = toNumber(
     payload?.subtotal ?? payload?.data?.subtotal ?? payload?.cart?.subtotal ?? payload?.total,
@@ -177,7 +211,6 @@ export default function CartPage({
       
       setPaymentResult(result);
 
-      // MMQR သို့မဟုတ် API ကလာသော qr_data ကို ဖမ်းယူခြင်း
       const rawQrData = result?.payment?.qr_data || (result as any)?.qr_data;
       if (rawQrData) {
         setQrStringData(rawQrData);
@@ -218,18 +251,18 @@ export default function CartPage({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-100/60 backdrop-blur-sm p-3 sm:p-4 overflow-hidden selection:bg-blue-500/10 pt-12 pb-24 sm:py-6">
+    <div className="mobile-typography-fix fixed inset-0 z-40 flex items-center justify-center bg-slate-100/60 backdrop-blur-sm p-3 sm:p-4 overflow-hidden selection:bg-blue-500/10 pt-12 pb-24 sm:py-6">
       <div className="w-full max-w-2xl bg-white text-slate-900 rounded-[28px] sm:rounded-[32px] p-3.5 sm:p-6 border border-slate-200 shadow-2xl space-y-2.5 sm:space-y-4">
         
         {/* Header Block */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={onBack} aria-label="Back" className="p-1 sm:p-2 rounded-xl hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer text-slate-700">
-              <ChevronLeft size={20} />
-            </button>
-            <h1 className="text-base sm:text-xl font-black tracking-tight">Confirm Payment</h1>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <h3 className="text-[10px] sm:text-[11px] font-bold tracking-tight whitespace-nowrap text-slate-900 leading-none">
+              Confirm Payment
+            </h3>
           </div>
-          <button onClick={onGoHome} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors">
+          
+          <button onClick={onGoHome} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -239,10 +272,17 @@ export default function CartPage({
           <div className="space-y-2">
             {cart.items.map((item) => (
               <div key={item.id} className="bg-slate-50/60 p-2.5 sm:p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="font-black text-slate-900 text-xs sm:text-sm tracking-tight truncate">{item.name}</p>
-                  <p className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase">{item.days > 0 ? `${item.days} Days Allotted` : 'Flexible Validity'}</p>
-                  <p className="text-blue-600 font-black text-xs">{item.price.toLocaleString()} MMK</p>
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  {/* Name */}
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight truncate">{item.name}</p>
+                  
+                  {/* 🔴 plan_type မှ ခွဲထုတ်ထားသော Package Label (DAYPASS / FIXED BUNDLE / UNLIMITED) 🔴 */}
+                  <p className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                    {item.packageTypeLabel}
+                  </p>
+                  
+                  {/* Price Info */}
+                  <p className="text-blue-600 font-bold text-xs">{item.price.toLocaleString()} MMK</p>
                 </div>
 
                 {/* Quantity Controller Box */}
@@ -254,7 +294,7 @@ export default function CartPage({
                   >
                     <Minus size={12} />
                   </button>
-                  <div className="w-7 h-6 sm:w-8 sm:h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-black text-xs text-slate-800">
+                  <div className="w-7 h-6 sm:w-8 sm:h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-800">
                     {item.quantity}
                   </div>
                   <button
@@ -270,17 +310,19 @@ export default function CartPage({
           </div>
         )}
 
-        {/* BILLING GATEWAY INFORMATION */}
+        {/* BILLING INFORMATION */}
         <div className="border-t border-dashed border-slate-200 pt-2 sm:pt-3 space-y-2.5 sm:space-y-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             <CreditCard className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <h3 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">Billing Gateway Information</h3>
+            <h3 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap leading-none">
+              Billing Information
+            </h3>
           </div>
 
           {/* Remittance Grid Options */}
           <div className="space-y-1">
-            <label className="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-wide">Select Payment Vendor</label>
-            {loadingMethods && <div className="text-slate-400 text-xs py-1">Loading vendors…</div>}
+            <label className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide">Select Payment Method</label>
+            {loadingMethods && <div className="text-slate-400 text-xs py-1">Loading payment …</div>}
             {methodsError && <div className="text-rose-500 text-xs p-2 bg-rose-50 border border-rose-100 rounded-xl">{methodsError}</div>}
             
             <div className="grid grid-cols-2 gap-2">
@@ -298,7 +340,7 @@ export default function CartPage({
                   >
                     <div className="flex items-center gap-1.5 min-w-0">
                       {method.logo_url && <img src={method.logo_url} alt="" className="w-4 h-4 object-contain shrink-0" />}
-                      <span className="font-black text-[11px] sm:text-xs truncate">{method.name}</span>
+                      <span className="font-bold text-[11px] sm:text-xs truncate">{method.name}</span>
                     </div>
                     <div className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 ${active ? 'border-blue-600 text-blue-600 bg-blue-600' : 'border-slate-300 bg-white'}`}>
                       {active && <div className="w-1 h-1 bg-white rounded-full" />}
@@ -309,11 +351,11 @@ export default function CartPage({
             </div>
           </div>
 
-          {/* Customer Phone Input Only (Order Note Has Been Removed) */}
+          {/* Customer Phone Input */}
           <div className="space-y-2">
             <div>
-              <label className="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-0.5">
-                <Phone className="w-3 h-3 shrink-0" /> Mobile Phone Credentials
+              <label className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-0.5">
+                <Phone className="w-3 h-3 shrink-0" /> Enter Your Mobile Phone Number
               </label>
               <input
                 type="tel"
@@ -333,8 +375,8 @@ export default function CartPage({
 
           {/* Total Summary Valuation Area */}
           <div className="border-t border-dashed border-slate-200 pt-2 flex justify-between items-baseline">
-            <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">Total Net Valuation</span>
-            <span className="text-sm sm:text-base font-black text-slate-900 tracking-tight">{cart.subtotal.toLocaleString()} MMK</span>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Total Price</span>
+            <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">{cart.subtotal.toLocaleString()} MMK</span>
           </div>
 
           {/* CTA Action Buttons Row */}
@@ -343,7 +385,7 @@ export default function CartPage({
               <button
                 disabled={!selectedMethod || submitting}
                 onClick={handlePlaceOrderSubmit}
-                className="w-full py-2.5 sm:py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-white bg-blue-600 disabled:opacity-40 transition-opacity border-none cursor-pointer shadow-md hover:bg-blue-700"
+                className="w-full py-2.5 sm:py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-blue-600 disabled:opacity-40 transition-opacity border-none cursor-pointer shadow-md hover:bg-blue-700"
               >
                 {submitting ? 'Verifying…' : 'Place Order'}
               </button>
@@ -352,7 +394,7 @@ export default function CartPage({
                 type="button"
                 disabled={busy}
                 onClick={handleCancelOrderFlow}
-                className="w-full py-2.5 sm:py-3.5 rounded-xl font-black text-xs uppercase tracking-wider text-rose-600 bg-rose-50 border-none cursor-pointer shadow-sm hover:bg-rose-100 transition-colors"
+                className="w-full py-2.5 sm:py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-rose-600 bg-rose-50 border-none cursor-pointer shadow-sm hover:bg-rose-100 transition-colors"
               >
                 Cancel Order
               </button>
@@ -369,11 +411,11 @@ export default function CartPage({
             
             {/* ORDER STATUS BANNER BOX */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl py-2.5 px-3 space-y-0.5">
-              <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest">ORDER STATUS</p>
-              <p className="text-xs text-amber-700 font-black">Waiting For Your Payment</p>
+              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">ORDER STATUS</p>
+              <p className="text-xs text-amber-700 font-bold">Waiting For Your Payment</p>
               
               <div className="pt-1 border-t border-amber-200/50 mt-1">
-                <span className="text-[10px] font-black text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded-md tracking-wide inline-block">
+                <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded-md tracking-wide inline-block">
                   {currentApiStatusText}
                 </span>
               </div>
@@ -382,7 +424,7 @@ export default function CartPage({
             {/* MMQR CODE DISPLAY BLOCK */}
             {qrStringData ? (
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center space-y-3">
-                <div className="flex items-center gap-1.5 text-slate-800 font-black text-xs uppercase tracking-wide">
+                <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs uppercase tracking-wide">
                   <QrCode className="w-4 h-4 text-blue-600" />
                   <span>Scan MMQR To Pay</span>
                 </div>
@@ -400,7 +442,7 @@ export default function CartPage({
                 <button
                   type="button"
                   onClick={copyQrDataToClipboard}
-                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-600 hover:bg-slate-100 flex items-center gap-1 transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-100 flex items-center gap-1 transition-all cursor-pointer"
                 >
                   {copiedQr ? (
                     <>
@@ -417,7 +459,7 @@ export default function CartPage({
               </div>
             ) : (
               <div className="space-y-2 text-slate-600">
-                <div className="flex items-center justify-center gap-2 text-slate-800 font-black text-xs uppercase tracking-wide">
+                <div className="flex items-center justify-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wide">
                   <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> Payment Processing
                 </div>
                 <p className="text-[11px] font-medium text-slate-400 px-2 leading-relaxed">
@@ -470,7 +512,7 @@ export default function CartPage({
                 type="button"
                 disabled={cancellingOrder}
                 onClick={handleCancelOrderFlow}
-                className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border-none cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border-none cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
                 {cancellingOrder ? (
                   <>

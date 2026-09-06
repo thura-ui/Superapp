@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { usePreventDevTools } from './hooks/usePreventDevTools'; // 🔴 Prevent DevTools Hook Import
 import LoadingPage from './components/LoadingPage';
 import TopNavigation from './components/TopNavigation';
 import BottomNavigation from './components/BottomNavigation';
@@ -8,6 +10,8 @@ import CountrySelection from './components/CountrySelection';
 import PlanDetails from './components/PlanDetails';
 import HelpCenter from './components/HelpCenter';
 import EsimCheck from './components/EsimCheck';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsConditions from './components/TermsConditions';
 import { logout } from './lib/authApi';
 import { fetchPopularProducts } from './lib/productsApi';
 
@@ -17,7 +21,7 @@ import ApnSettings from './components/ApnSettings';
 import FAQ from './components/FAQ';
 import MyData from './components/MyData';
 import PurchaseHistory from './components/PurchaseHistory';
-import SparkHistory from './components/SparkHistory'; // 🌟 [ADDED]: SparkHistory Component
+import SparkHistory from './components/SparkHistory'; 
 import CartPage from './components/Cart';
 import AccountAuth from './components/AccountAuth';
 import AccountDetails from './components/AccountDetails';
@@ -34,8 +38,14 @@ const SUPPORT_CHAT_POSITION_KEY = 'simless-support-chat-position';
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 function App() {
+  // 🔴 DevTools & Right-Click တားဆီးကာကွယ်မှု စနစ်အား အသက်သွင်းခြင်း
+  usePreventDevTools();
+
+  const { i18n } = useTranslation();
+  const [langKey, setLangKey] = useState<string>(i18n.language || 'en');
+
   const [isLoading, setIsLoading] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history'>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history' | 'privacy-policy' | 'terms-conditions'>('home');
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [autoOpenCheckout, setAutoOpenCheckout] = useState(false);
   
@@ -60,6 +70,21 @@ function App() {
     originY: 0,
     moved: false,
   });
+
+  useEffect(() => {
+    const handleLangSync = () => {
+      const current = localStorage.getItem('language') || i18n.language || 'en';
+      setLangKey(`${current}-${Date.now()}`);
+    };
+
+    i18n.on('languageChanged', handleLangSync);
+    window.addEventListener('language-changed', handleLangSync);
+
+    return () => {
+      i18n.off('languageChanged', handleLangSync);
+      window.removeEventListener('language-changed', handleLangSync);
+    };
+  }, [i18n]);
 
   useEffect(() => {
     let isMounted = true;
@@ -179,6 +204,25 @@ function App() {
 
   const goHome = () => setCurrentScreen('home');
   const goProduct = () => setCurrentScreen('country-selection');
+  
+  const goCountryEsims = () => {
+    setActivePlanTab('country');
+    setCurrentScreen('country-selection');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goRegionalEsims = () => {
+    setActivePlanTab('regional');
+    setCurrentScreen('country-selection');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goGlobalEsims = () => {
+    setActivePlanTab('global');
+    setCurrentScreen('country-selection');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const goCart = () => {
     if (!isLoggedIn) {
       showAlert('signin-required', () => {
@@ -192,6 +236,9 @@ function App() {
   const goEsimCheck = () => setCurrentScreen('esim-check');
   const goHelpCenter = () => setCurrentScreen('help-center');
   const goPartner = () => setCurrentScreen('partner');
+  const goPrivacyPolicy = () => setCurrentScreen('privacy-policy');
+  const goTerms = () => setCurrentScreen('terms-conditions');
+
   const goAuth = (mode: 'sign-in' | 'sign-up' = 'sign-in') => {
     setAuthMode(mode);
     setCurrentScreen('auth');
@@ -203,7 +250,7 @@ function App() {
 
   const goToMyData = () => setCurrentScreen('my-data');
   const goToMyOrders = () => setCurrentScreen('my-orders');
-  const goToSparkHistory = () => setCurrentScreen('spark-history'); // 🌟 [ADDED]: Spark History Navigation
+  const goToSparkHistory = () => setCurrentScreen('spark-history'); 
 
   const goHistory = () => {
     if (!isLoggedIn) {
@@ -254,13 +301,47 @@ function App() {
     setCurrentScreen('plan-details');
   };
 
+  const scrollToWhatIsEsim = () => {
+    if (currentScreen !== 'home') {
+      setCurrentScreen('home');
+      setTimeout(() => {
+        const section = document.getElementById('what-is-esim-section');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    } else {
+      const section = document.getElementById('what-is-esim-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
+
+  const scrollToHowItWorks = () => {
+    if (currentScreen !== 'home') {
+      setCurrentScreen('home');
+      setTimeout(() => {
+        const section = document.getElementById('how-it-works-section');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    } else {
+      const section = document.getElementById('how-it-works-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
+
   if (isLoading) {
     return <LoadingPage />;
   }
 
   if (currentScreen === 'cart') {
     return (
-      <>
+      <div key={`cart-${langKey}`}>
         <CartPage
           onBack={goHome}
           onGoProduct={goProduct}
@@ -281,29 +362,47 @@ function App() {
         </div>
         {supportChatLauncher}
         <CustomAlertHost />
-      </>
+      </div>
     );
   }
 
   if (currentScreen === 'plan-details' && selectedCountry) {
     return (
-      <>
-        <PlanDetails
-          country={selectedCountry}
-          planFilterType={selectedPlanType}
+      <div key={`plan-${langKey}`} className="min-h-screen flex flex-col justify-between bg-white text-slate-900 overflow-x-hidden pt-[75px] sm:pt-[85px] pb-20 md:pb-0 relative font-['Poppins']">
+        
+        <TopNavigation
+          activeTab="plan"
           isLoggedIn={isLoggedIn}
-          onRequireLogin={() => {
-            setPostAuthScreen('cart');
-            goAuth('sign-in');
-          }}
-          onProceedToCheckout={() => {
-            setAutoOpenCheckout(true);
-            setCurrentScreen('cart');
-          }}
-          onBack={handleBackFromPlanDetails}
-          onHome={goHome}
-          onGoToCart={goCart}
+          onHomeClick={goHome}
+          onProductClick={goProduct}
+          onInstallClick={() => setCurrentScreen('esim-installation-guide')}
+          onDataClick={goToMyData}
+          onPartnerClick={goPartner}
+          onHelpClick={goHelpCenter}
+          onAccountClick={goToAccountOrAuth}
+          onHistoryClick={goHistory}
+          onChatClick={() => setShowSupportChat(true)}
         />
+
+        <main className="flex-1 w-full relative z-10">
+          <PlanDetails
+            country={selectedCountry}
+            planFilterType={selectedPlanType}
+            isLoggedIn={isLoggedIn}
+            onRequireLogin={() => {
+              setPostAuthScreen('cart');
+              goAuth('sign-in');
+            }}
+            onProceedToCheckout={() => {
+              setAutoOpenCheckout(true);
+              setCurrentScreen('cart');
+            }}
+            onBack={handleBackFromPlanDetails}
+            onHome={goHome}
+            onGoToCart={goCart}
+          />
+        </main>
+
         <div className="md:hidden">
           <BottomNavigation
             activeTab="plan"
@@ -315,9 +414,29 @@ function App() {
             onAccountClick={goToAccountOrAuth}
           />
         </div>
+
+        <div className="hidden md:block">
+          <Footer
+            activeScreen={currentScreen} 
+            onHomeClick={goHome}
+            onHelpCenterClick={goHelpCenter}
+            onFaqClick={() => openFaq(undefined, 'help-center')}
+            onTravelEsimClick={() => setCurrentScreen('esim-installation-guide')}
+            onApnSettingsClick={() => setCurrentScreen('apn-settings')}
+            onEsimCheckClick={goEsimCheck}
+            onWhatIsEsimClick={scrollToWhatIsEsim}
+            onHowItWorksClick={scrollToHowItWorks}
+            onPrivacyPolicyClick={goPrivacyPolicy}
+            onTermsClick={goTerms}
+            onCountryEsimsClick={goCountryEsims}
+            onRegionalEsimsClick={goRegionalEsims}
+            onGlobalEsimsClick={goGlobalEsims}
+          />
+        </div>
+
         {supportChatLauncher}
         <CustomAlertHost />
-      </>
+      </div>
     );
   }
 
@@ -333,7 +452,8 @@ function App() {
     'home';
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] text-slate-900 overflow-x-hidden pb-24 md:pb-10">
+    <div key={langKey} className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] text-slate-900 overflow-x-hidden pb-20 md:pb-10 relative">
+      
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-cyan-300/12 rounded-full blur-[120px]" />
         <div className="absolute top-[20%] -right-[10%] w-[55%] h-[55%] bg-emerald-300/12 rounded-full blur-[100px]" />
@@ -341,6 +461,7 @@ function App() {
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
+        
         <TopNavigation
           activeTab={navTab}
           isLoggedIn={isLoggedIn}
@@ -355,7 +476,7 @@ function App() {
           onChatClick={() => setShowSupportChat(true)}
         />
 
-        <main className="flex-1">
+        <main className="flex-1 w-full relative z-0">
           {currentScreen === 'home' && (
             <HomePage
               onExplorePlans={(filterType) => {
@@ -410,13 +531,21 @@ function App() {
 
           {currentScreen === 'esim-check' && (
             <EsimCheck
-              onBack={goHome}
-              onYes={goHome}
+              onBack={goHelpCenter}
+              onYes={goHelpCenter}
             />
           )}
 
           {currentScreen === 'no-esim-support' && (
             <NoEsimSupport onBack={goEsimCheck} onOrderSim={goHome} />
+          )}
+
+          {currentScreen === 'privacy-policy' && (
+            <PrivacyPolicy onBack={goHome} />
+          )}
+
+          {currentScreen === 'terms-conditions' && (
+            <TermsConditions onBack={goHome} />
           )}
 
           {currentScreen === 'auth' && (
@@ -450,11 +579,10 @@ function App() {
                 setCurrentScreen('auth');
               }}
               onGoToOrders={goToMyOrders}
-              onGoToSparkHistory={goToSparkHistory} // 🌟 [ADDED]: Spark History Page သို့သွားရန် Prop ချိတ်ဆက်ထားသည်
+              onGoToSparkHistory={goToSparkHistory} 
             />
           )}
 
-          {/* 🌟 [ADDED]: Spark History Page View */}
           {currentScreen === 'spark-history' && (
             <SparkHistory onBack={() => setCurrentScreen('account-details')} />
           )}
@@ -491,6 +619,13 @@ function App() {
             onTravelEsimClick={() => setCurrentScreen('esim-installation-guide')}
             onApnSettingsClick={() => setCurrentScreen('apn-settings')}
             onEsimCheckClick={goEsimCheck}
+            onWhatIsEsimClick={scrollToWhatIsEsim}
+            onHowItWorksClick={scrollToHowItWorks}
+            onPrivacyPolicyClick={goPrivacyPolicy}
+            onTermsClick={goTerms}
+            onCountryEsimsClick={goCountryEsims}
+            onRegionalEsimsClick={goRegionalEsims}
+            onGlobalEsimsClick={goGlobalEsims}
           />
         </div>
       </div>

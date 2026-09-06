@@ -2,7 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 🌟 Local Fonts: Poppins Import (Mapped correctly by weight and style) */
+/* ==========================================
+   iOS Mobile View Optimization (iPhone App Style)
+   ========================================== */
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* iOS Safe Area Padding */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide default Edge/IE password reveal & clear buttons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media (max-width: 640px) {
+  /* Title Font Size Fix for Mobile */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.35rem; }
+  h3 { font-size: 1.05rem; }
+
+  /* Body & Subtitle Alignment without force overriding Tailwind classes */
+  body {
+    font-size: 0.78rem;
+  }
+}
+
+/* Hide Webkit standard reveal buttons */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+
+  /* Grid Gap & Container Spacing Adjustment for iPhone Screen Width */
+  .layout-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+/* 🌟 Local Fonts: Poppins Import */
 @font-face {
   font-family: 'Poppins';
   src: url('./fonts/Poppins/Poppins-ExtraLightItalic.ttf') format('truetype');
@@ -83,7 +136,6 @@
   font-display: swap;
 }
 
-/* 🌟 ExtraBold (800) ကို ချိတ်ဆက်ခြင်း */
 @font-face {
   font-family: 'Poppins';
   src: url('./fonts/Poppins/Poppins-ExtraBold.ttf') format('truetype');
@@ -92,7 +144,6 @@
   font-display: swap;
 }
 
-/* 🌟 Black (900) ကို ချိတ်ဆက်ခြင်း */
 @font-face {
   font-family: 'Poppins';
   src: url('./fonts/Poppins/Poppins-Black.ttf') format('truetype');
@@ -101,7 +152,7 @@
   font-display: swap;
 }
 
-/* 🌟 Clean Global Base (Removed aggressive * !important which causes conflicts) */
+/* 🌟 Clean Global Base */
 @layer base {
   html, body, #root {
     font-family: 'Poppins', sans-serif;
@@ -123,11 +174,12 @@
   }
 
   p, span, div, a, li {
-    @apply text-sm sm:text-base leading-relaxed text-slate-800;
+    @apply text-[13px] font-semibold leading-relaxed text-slate-800;
   }
 
+  /* Buttons, Nav Elements & Inputs ကို ၁ ညီတည်း ညှိထားပါသည် */
   button, input, select, textarea {
-    @apply font-medium text-xs sm:text-sm text-slate-900;
+    @apply font-semibold text-[13px] text-slate-900;
   }
 }
 
@@ -209,133 +261,76 @@
 }
 
 /* ==========================================
-   Myanmar (my) Font Standardization
-   - Standardizes font-size & font-weight across web & mobile
-   - Fixes underline/cutoff issues from Myanmar stacking diacritics
-   - Prevents unwanted wrapping in nav, buttons, labels
-   - Font family is intentionally NOT changed
+   Myanmar (my) Font Standardization (Fixed for Responsive Re-rendering)
    ========================================== */
 :lang(my),
-[lang="my"],
-[lang="my"] * {
-  text-decoration: none !important;
-  line-height: 1.7 !important;
-  letter-spacing: 0 !important;
-  word-break: keep-all;
+[lang^="my"],
+[lang^="my"] * {
+  line-height: 1.8;
+  letter-spacing: 0;
+  word-break: break-word;
   overflow-wrap: break-word;
-  font-weight: 500;
 }
 
-/* Headings: readable hierarchy, no clipping */
-:lang(my) h1,
-[lang="my"] h1 {
-  font-size: 1.4rem;
+/* Headings */
+:lang(my) h1, [lang^="my"] h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+:lang(my) h2, [lang^="my"] h2 {
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.5;
 }
-:lang(my) h2,
-[lang="my"] h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  line-height: 1.5;
-}
-:lang(my) h3,
-[lang="my"] h3 {
-  font-size: 1.05rem;
+:lang(my) h3, [lang^="my"] h3 {
+  font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.5;
 }
 
-/* Body text: consistent size */
+/* Text Elements Responsive ကျစွာ စာသားပြောင်းလဲနိုင်ရေးအတွက် !important များ ဖြုတ်ထားပါသည် */
 :lang(my) p,
 :lang(my) span,
 :lang(my) div,
 :lang(my) a,
 :lang(my) li,
-[lang="my"] p,
-[lang="my"] span,
-[lang="my"] div,
-[lang="my"] a,
-[lang="my"] li {
-  font-size: 0.9rem;
-  font-weight: 500;
-  line-height: 1.7;
-}
-
-/* Buttons & inputs: compact, single-line */
 :lang(my) button,
 :lang(my) input,
 :lang(my) select,
 :lang(my) textarea,
-[lang="my"] button,
-[lang="my"] input,
-[lang="my"] select,
-[lang="my"] textarea {
-  font-size: 0.8rem;
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
+[lang^="my"] p,
+[lang^="my"] span,
+[lang^="my"] div,
+[lang^="my"] a,
+[lang^="my"] li,
+[lang^="my"] button,
+[lang^="my"] input,
+[lang^="my"] select,
+[lang^="my"] textarea {
+  line-height: 1.7;
 }
 
-/* Nav links, labels, badges: force single line */
-:lang(my) nav span,
-:lang(my) nav a,
-:lang(my) nav button,
-[lang="my"] nav span,
-[lang="my"] nav a,
-[lang="my"] nav button {
-  white-space: nowrap !important;
-  font-size: 0.78rem;
-  font-weight: 500;
-}
+/* Mobile Screen Small Card Typography & Padding Refinement */
+@media (max-width: 640px) {
+  /* Title Font Size Fix for Mobile */
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.35rem !important; }
+  h3 { font-size: 1.05rem !important; }
 
-/* Mobile-specific: tighter line-height, smaller fonts to fit single-line */
-@media (max-width: 768px) {
-  :lang(my),
-  [lang="my"],
-  [lang="my"] * {
-    line-height: 1.6 !important;
+  /* 🔴 p, span, div စသည်တို့အစား Class သီးသန့် ပေးလိုက်ပါသည် 🔴 */
+  .mobile-typography-fix p,
+  .mobile-typography-fix span,
+  .mobile-typography-fix div,
+  .mobile-typography-fix a,
+  .mobile-typography-fix li,
+  .mobile-typography-fix button {
+    font-size: 0.78rem !important; /* ~12.5px iOS Standard */
   }
-  :lang(my) h1,
-  [lang="my"] h1 {
-    font-size: 1.25rem;
-  }
-  :lang(my) h2,
-  [lang="my"] h2 {
-    font-size: 1.1rem;
-  }
-  :lang(my) h3,
-  [lang="my"] h3 {
-    font-size: 1rem;
-  }
-  :lang(my) p,
-  :lang(my) span,
-  :lang(my) div,
-  :lang(my) a,
-  :lang(my) li,
-  [lang="my"] p,
-  [lang="my"] span,
-  [lang="my"] div,
-  [lang="my"] a,
-  [lang="my"] li {
-    font-size: 0.82rem;
-  }
-  :lang(my) button,
-  :lang(my) input,
-  :lang(my) select,
-  :lang(my) textarea,
-  [lang="my"] button,
-  [lang="my"] input,
-  [lang="my"] select,
-  [lang="my"] textarea {
-    font-size: 0.75rem;
-  }
-  :lang(my) nav span,
-  :lang(my) nav a,
-  :lang(my) nav button,
-  [lang="my"] nav span,
-  [lang="my"] nav a,
-  [lang="my"] nav button {
-    font-size: 0.72rem;
+
+  /* Grid Gap & Container Spacing Adjustment for iPhone Screen Width */
+  .layout-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
 }

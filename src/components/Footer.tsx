@@ -10,19 +10,33 @@ interface FooterProps {
   onTravelEsimClick?: () => void;
   onApnSettingsClick?: () => void;
   onEsimCheckClick?: () => void;
+  onWhatIsEsimClick?: () => void;
+  onHowItWorksClick?: () => void;
+  onPrivacyPolicyClick?: () => void;
+  onTermsClick?: () => void;
+  // 🌟 CountrySelection Tabs သို့ သွားမည့် Handlers များ
+  onCountryEsimsClick?: () => void;
+  onRegionalEsimsClick?: () => void;
+  onGlobalEsimsClick?: () => void;
 }
 
 export default function Footer({ 
-  activeScreen,
   onHomeClick,
-  onHelpCenterClick, 
-  onFaqClick, 
-  onApnSettingsClick, 
-  onEsimCheckClick 
+  onHelpCenterClick,
+  onFaqClick,
+  onTravelEsimClick,
+  onApnSettingsClick,
+  onEsimCheckClick,
+  onWhatIsEsimClick,
+  onHowItWorksClick,
+  onPrivacyPolicyClick,
+  onTermsClick,
+  onCountryEsimsClick,
+  onRegionalEsimsClick,
+  onGlobalEsimsClick,
 }: FooterProps) {
   
   const { t } = useTranslation();
-
   const [showContact, setShowContact] = useState(false);
 
   const handleNav = (action?: () => void) => {
@@ -37,140 +51,222 @@ export default function Footer({
 
   const phone = '959943229667';
 
-  // 🌟 Font weight ကို Navbar အတိုင်း font-semibold သို့ ပြောင်းလဲထားပါသည်
-  const getLinkClass = (screenName: string) => {
-    const isActive = activeScreen === screenName;
-    return `h-9 sm:h-10 px-3.5 sm:px-4 rounded-full font-semibold text-xs lg:text-[13px] tracking-wide flex items-center justify-center transition-all duration-300 border border-solid cursor-pointer whitespace-nowrap backdrop-blur-md active:scale-95 ${
-      isActive
-        ? "bg-blue-600/80 backdrop-blur-xl border-blue-400/60 text-white shadow-[0_8px_25px_rgba(37,99,235,0.35)] scale-[1.02]"
-        : "bg-blue-500/10 backdrop-blur-md border-blue-400/20 text-slate-900 hover:bg-blue-600/20 hover:border-blue-400/40 hover:text-blue-700 shadow-[0_4px_15px_rgba(37,99,235,0.08)]"
-    }`;
-  };
-
   return (
-    <footer className="w-full bg-transparent py-8 block relative z-40 m-0 select-none font-['Poppins']">
+    <footer className="w-full bg-white/60 backdrop-blur-lg border-t border-slate-200/60 pt-12 pb-8 relative z-40 select-none font-['Poppins'] text-slate-900">
       
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-full px-3 sm:px-6 lg:px-8 mx-auto">
         
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-4">
+        {/* Main Columns Flex Layout */}
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-12 pb-10">
           
-          {/* Logo Section */}
-          <div className="flex items-center justify-center shrink-0">
-            <img
-              src="/top_navber_and_Footer_Navbar_logo.png"
-              alt="SIMLESS Logo"
-              className="nav-logo !h-[80px] sm:!h-[90px] w-auto object-contain ml-3 md:ml-5"
-            />
+          {/* Column 1: Logo Section */}
+          <div className="flex flex-col items-start justify-start shrink-0 max-w-xs">
+            <button 
+              type="button"
+              onClick={() => handleNav(onHomeClick)}
+              className="p-0 m-0 border-none bg-transparent cursor-pointer flex items-center h-[55px] sm:h-[80px] lg:h-[85px] transition-transform hover:scale-105"
+            >
+              <img
+                src="/Simless-logo03.png"
+                alt="SIMLESS Logo"
+                className="h-full w-auto object-contain scale-100 sm:scale-110 origin-left"
+              />
+            </button>
+            <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed text-left">
+              Stay connected anywhere, anytime with SIMLESS Travel eSIM.
+            </p>
           </div>
 
-          {/* Links Section */}
-          <nav className="flex flex-wrap items-center justify-center lg:justify-end gap-2 sm:gap-2.5 max-w-full">
+          {/* Right Columns Wrapper */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 lg:gap-10 w-full lg:max-w-4xl lg:ml-auto">
             
-            <button 
-              onClick={() => handleNav(onHomeClick)}
-              className={getLinkClass('home')}
-            >
-              {t('navHome', 'Home')}
-            </button>
-            
-            <button 
-              onClick={() => handleNav(onHelpCenterClick)}
-              className={getLinkClass('help-center')}
-            >
-              {t('footerHelpCenter', 'Help Center')}
-            </button>
-            
-            <button 
-              onClick={() => handleNav(onApnSettingsClick)}
-              className={getLinkClass('apn-settings')}
-            >
-              {t('footerApnSettings', 'APN Settings')}
-            </button>
-            
-            <button 
-              onClick={() => handleNav(onFaqClick)}
-              className={getLinkClass('faq')}
-            >
-              {t('footerFaq', 'FAQ')}
-            </button>
-
-            <button 
-              onClick={() => handleNav(onEsimCheckClick)}
-              className={getLinkClass('esim-check')}
-            >
-              {t('footerEsimCheck', 'eSIM Check')}
-            </button>
-
-            {/* Contact Us Section */}
-            <div className="relative flex items-center">
-              <button 
-                onClick={() => setShowContact(!showContact)}
-                className={`h-9 sm:h-10 px-3.5 sm:px-4 rounded-full font-semibold text-xs lg:text-[13px] tracking-wide flex items-center justify-center transition-all duration-300 border border-solid cursor-pointer whitespace-nowrap backdrop-blur-md active:scale-95 ${
-                  showContact 
-                    ? "bg-blue-600/80 backdrop-blur-xl border-blue-400/60 text-white shadow-[0_8px_25px_rgba(37,99,235,0.35)] scale-[1.02]" 
-                    : "bg-blue-500/10 backdrop-blur-md border-blue-400/20 text-slate-900 hover:bg-blue-600/20 hover:border-blue-400/40 hover:text-blue-700 shadow-[0_4px_15px_rgba(37,99,235,0.08)]"
-                }`}
-              >
-                {t('footerContact', 'Contact')}
-              </button>
-
-              {/* Contact Popup Dropdown */}
-              {showContact && (
-                <div className="absolute bottom-[calc(100%+16px)] right-0 sm:right-1/2 sm:translate-x-1/2 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                  <div className="absolute -bottom-2 right-6 sm:right-1/2 sm:translate-x-1/2 w-4 h-4 bg-white/70 border-b border-r border-blue-200/50 rotate-45 backdrop-blur-xl shadow-[4px_4px_10px_rgba(0,0,0,0.05)]" />
-                  
-                  <div className="relative flex items-center gap-3 sm:gap-4 bg-white/70 backdrop-blur-xl border border-blue-200/50 shadow-[0_12px_40px_rgba(37,99,235,0.15)] px-4 py-3 rounded-full">
-                    
-                    <button 
-                      type="button"
-                      onClick={() => handleOpenLink(`https://viber.click/${phone}`)}
-                      title="Viber" 
-                      className="group flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white border border-blue-100 transition-all duration-300 hover:scale-110 hover:-translate-y-1 shadow-[0_4px_15px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_20px_rgba(168,85,247,0.3)] text-purple-500 cursor-pointer p-0"
-                    >
-                      <PhoneCall className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
-                    </button>
-
-                    {/* 🌟 Facebook Icon ခလုတ်တွင် သက်ဆိုင်ရာ Link အသစ်အား ချိတ်ဆက်ပေးထားပါသည် */}
-                    <button 
-                      type="button"
-                      onClick={() => handleOpenLink('https://www.facebook.com/share/19F8GUa43Q/?mibextid=wwXIfr')}
-                      title="Facebook" 
-                      className="group flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white border border-blue-100 transition-all duration-300 hover:scale-110 hover:-translate-y-1 shadow-[0_4px_15px_rgba(59,130,246,0.15)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] text-blue-500 cursor-pointer p-0"
-                    >
-                      <Facebook className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
-                    </button>
-
-                    <button 
-                      type="button"
-                      onClick={() => handleOpenLink('https://t.me/mattsbie')}
-                      title="Telegram" 
-                      className="group flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white border border-blue-100 transition-all duration-300 hover:scale-110 hover:-translate-y-1 shadow-[0_4px_15px_rgba(14,165,233,0.15)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.3)] text-sky-500 cursor-pointer p-0"
-                    >
-                      <Send className="w-5 h-5 sm:w-[22px] sm:h-[22px] -ml-0.5 mt-0.5" />
-                    </button>
-
-                    <button 
-                      type="button"
-                      onClick={() => handleOpenLink(`https://wa.me/${phone}`)}
-                      title="WhatsApp" 
-                      className="group flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/80 hover:bg-white border border-blue-100 transition-all duration-300 hover:scale-110 hover:-translate-y-1 shadow-[0_4px_15px_rgba(16,185,129,0.15)] hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] text-emerald-500 cursor-pointer p-0"
-                    >
-                      <MessageCircle className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
-                    </button>
-
-                  </div>
-                </div>
-              )}
+            {/* 🌟 Column 2: Our eSIMs */}
+            <div className="flex flex-col text-left space-y-3 w-full">
+              <h4 className="text-sm font-bold text-slate-900 tracking-wider whitespace-nowrap">
+                Our eSIMs
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <button 
+                    type="button" 
+                    onClick={() => handleNav(onCountryEsimsClick || onHomeClick)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Country eSIMs
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    type="button" 
+                    onClick={() => handleNav(onRegionalEsimsClick || onHomeClick)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Regional eSIMs
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    type="button" 
+                    onClick={() => handleNav(onGlobalEsimsClick || onHomeClick)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Globals
+                  </button>
+                </li>
+              </ul>
             </div>
 
-          </nav>
+            {/* Column 3: About eSIMs */}
+            <div className="flex flex-col text-left space-y-3 w-full">
+              <h4 className="text-sm font-bold text-slate-900 tracking-wider whitespace-nowrap">
+                About eSIMs
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <button type="button" onClick={() => handleNav(onWhatIsEsimClick || onFaqClick)} className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap">
+                    What is an eSIM?
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => handleNav(onHowItWorksClick || onTravelEsimClick)} className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap">
+                    How does Simless eSIM work?
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => handleNav(onEsimCheckClick)} className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap">
+                    eSIM Compatibility
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => handleNav(onApnSettingsClick)} className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap">
+                    APN Settings
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Company (မူလအတိုင်း Get Help ထက် အရင် ထားရှိပေးထားပါသည်) */}
+            <div className="flex flex-col text-left space-y-3 w-full pl-10 sm:pl-12 relative">
+              <h4 className="text-sm font-bold text-slate-900 tracking-wider whitespace-nowrap">
+                Company
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <button 
+                    type="button" 
+                    onClick={() => handleNav(onTermsClick)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Terms & Conditions
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    type="button" 
+                    onClick={() => handleNav(onPrivacyPolicyClick)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Privacy Policy
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 5: Get Help */}
+            <div className="flex flex-col text-left space-y-3 w-full pl-15 sm:pl-10 relative">
+              <h4 className="text-sm font-bold text-slate-900 tracking-wider whitespace-nowrap">
+                Get Help
+              </h4>
+              <ul className="space-y-2 text-xs font-semibold">
+                <li>
+                  <button type="button" onClick={() => handleNav(onHelpCenterClick)} className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap">
+                    Help Center
+                  </button>
+                </li>
+                <li className="relative">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowContact(!showContact)} 
+                    className="text-slate-600 hover:text-blue-600 transition-colors bg-transparent border-none p-0 cursor-pointer whitespace-nowrap"
+                  >
+                    Contact Us
+                  </button>
+
+                  {/* 🔴 Absolute Popover (Contact Us ခလုတ်အောက် တည်တည့်တွင် Floating ပုံစံဖြင့် ပေါ်လာပါမည်) 🔴 */}
+                  {showContact && (
+                    <div className="absolute top-full left-0 mt-2 z-50 animate-in fade-in duration-200">
+                      <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md p-2 rounded-2xl border border-blue-100 shadow-xl whitespace-nowrap">
+                        <button 
+                          type="button"
+                          onClick={() => handleOpenLink(`https://viber.click/${phone}`)}
+                          title="Viber" 
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white hover:bg-purple-50 border border-slate-100 transition-transform hover:scale-110 shadow-xs text-purple-600 cursor-pointer p-0 shrink-0"
+                        >
+                          <PhoneCall className="w-4 h-4" />
+                        </button>
+
+                        <button 
+                          type="button"
+                          onClick={() => handleOpenLink('https://www.facebook.com/share/19F8GUa43Q/?mibextid=wwXIfr')}
+                          title="Facebook" 
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white hover:bg-blue-50 border border-slate-100 transition-transform hover:scale-110 shadow-xs text-blue-600 cursor-pointer p-0 shrink-0"
+                        >
+                          <Facebook className="w-4 h-4" />
+                        </button>
+
+                        <button 
+                          type="button"
+                          onClick={() => handleOpenLink('https://t.me/mattsbie')}
+                          title="Telegram" 
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white hover:bg-sky-50 border border-slate-100 transition-transform hover:scale-110 shadow-xs text-sky-500 cursor-pointer p-0 shrink-0"
+                        >
+                          <Send className="w-4 h-4 -ml-0.5 mt-0.5" />
+                        </button>
+
+                        <button 
+                          type="button"
+                          onClick={() => handleOpenLink(`https://wa.me/${phone}`)}
+                          title="WhatsApp" 
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-white hover:bg-emerald-50 border border-slate-100 transition-transform hover:scale-110 shadow-xs text-emerald-500 cursor-pointer p-0 shrink-0"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 6: Follow Us */}
+            <div className="flex flex-col text-left space-y-3 w-full pl-8 sm:pl-7">
+              <h4 className="text-sm font-bold text-slate-900 tracking-wider whitespace-nowrap">
+                Follow Us
+              </h4>
+              <div className="flex items-center gap-3 pt-1">
+                <button 
+                  type="button"
+                  onClick={() => handleOpenLink('https://www.facebook.com/share/19F8GUa43Q/?mibextid=wwXIfr')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/60 font-semibold text-xs transition-all duration-300 hover:scale-105 cursor-pointer whitespace-nowrap"
+                >
+                  <Facebook className="w-4 h-4 text-blue-600" />
+                  <span>Facebook</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
-        {/* Copyright */}
-        <div className="mt-6 pt-6 border-t border-blue-200/20 text-center">
-          <p className="text-slate-400 text-xs font-semibold">
-            &copy; {new Date().getFullYear()} {t('footerCopyright', 'by SIMLESS Development')}, simless-mm.com
+        {/* Bottom Copyright Section */}
+        <div className="pt-6 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-slate-500 text-xs font-semibold">
+            &copy; {new Date().getFullYear()} {t('footerCopyright', 'Created by SIMLESS Development')}
           </p>
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+            <span>All rights reserved.</span>
+          </div>
         </div>
 
       </div>

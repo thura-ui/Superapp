@@ -46,22 +46,48 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Link ဖတ်နိုင်သော Helper Function
+  // Handle Initial Question/Answer if provided from props
+  useEffect(() => {
+    if (initialQuestion && initialAnswer) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          text: initialQuestion,
+          sender: 'user',
+          timestamp: new Date()
+        },
+        {
+          id: (Date.now() + 1).toString(),
+          text: initialAnswer,
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+    }
+  }, [initialQuestion, initialAnswer]);
+
+  // Safe Link Renderer
   const renderMessageContent = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
 
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
+        const isViber = part.includes('viber');
         return (
           <a
             key={index}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 mt-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-all no-underline"
+            className={
+              isViber
+                ? "inline-flex items-center gap-1 mt-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-all no-underline"
+                : "text-blue-600 underline font-medium break-all"
+            }
           >
-            💬 Open Viber Chat
+            {isViber ? '💬 Open Viber Chat' : part}
           </a>
         );
       }
@@ -86,6 +112,7 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
     setIsTyping(true);
 
     try {
+      // Calling Supabase Edge Function named 'chat'
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { message: userQuery }
       });
@@ -122,9 +149,10 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 sm:inset-auto sm:bottom-5 sm:right-5 z-50 w-full sm:w-[380px] h-[85vh] sm:h-[550px] sm:max-h-[85vh] bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col border border-blue-100 font-['Poppins'] animate-slide-up overflow-hidden">
+    /* 🔴 mobile-typography-fix class ကို ထည့်သွင်း၍ index.css ရှိ mobile CSS နှင့် ချိတ်ဆက်ပေးထားပါသည် 🔴 */
+    <div className="mobile-typography-fix fixed inset-x-0 bottom-0 sm:inset-auto sm:bottom-5 sm:right-5 z-50 w-full sm:w-[380px] h-[85vh] sm:h-[550px] sm:max-h-[85vh] bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col border border-blue-100 font-['Poppins'] animate-slide-up overflow-hidden">
       
-      {/* 🌟 Blue Header */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-sky-500 rounded-t-3xl p-4 shadow-md flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -143,7 +171,7 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
         </button>
       </div>
 
-      {/* Message List Area */}
+      {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-blue-50/30 to-white">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -152,9 +180,9 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
                 ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-br-none shadow-sm'
                 : 'bg-white border border-blue-100 text-gray-800 rounded-bl-none shadow-sm'
             }`}>
-              <p className="text-xs sm:text-sm font-normal leading-relaxed whitespace-pre-wrap">
+              <div className="text-xs sm:text-sm font-normal leading-relaxed whitespace-pre-wrap">
                 {renderMessageContent(message.text)}
-              </p>
+              </div>
               <p className={`text-[9px] mt-1 text-right ${message.sender === 'user' ? 'text-white/80' : 'text-gray-400'}`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
@@ -162,7 +190,7 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
           </div>
         ))}
 
-        {/* AI Typing Indicator */}
+        {/* Typing Indicator */}
         {isTyping && (
           <div className="flex justify-start">
             <div className="bg-white border border-blue-100 rounded-2xl rounded-bl-none px-3.5 py-2 text-gray-500 flex items-center gap-2 shadow-sm">
@@ -175,7 +203,7 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 🌟 Blue Input & Send Button Footer */}
+      {/* Input Field */}
       <div className="p-3 bg-white border-t border-blue-100 rounded-b-3xl">
         <div className="flex gap-2 items-center">
           <input
