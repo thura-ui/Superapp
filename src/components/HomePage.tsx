@@ -649,7 +649,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             {/* Desktop View Image */}
             <div className="hidden md:flex w-full justify-center">
               <img 
-                src={i18n.language === 'my' ? "/whatis-eSIM-burmese02.jpg" : "/whatis-eSIM-eng02.jpg"} 
+                src={i18n.language === 'my' ? "/whatiseSIM-web-burmese.jpg" : "/whatiseSIM-web-english.jpg"} 
                 alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
                 className="w-full h-auto object-contain rounded-2xl shadow-sm"
               />
