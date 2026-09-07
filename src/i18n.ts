@@ -101,7 +101,7 @@ const resources = {
       sparkHistory: 'Spark Usage History',
       logoutAccount: 'Logout',
       fullName: 'Full Name',
-      gmailAddress: 'Gmail Address',
+      gmailAddress: 'Email Address',
       phoneNumber: 'Phone Number',
       updating: 'Updating...',
       saveChanges: 'Save Changes',

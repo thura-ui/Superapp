@@ -334,3 +334,21 @@ input::-webkit-credentials-auto-fill-button {
     padding-right: 0.75rem !important;
   }
 }
+
+/* Chrome Mobile Autofill Overlay & Yellow/Black Box Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #334155 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Clear button (X) icon customization for mobile search inputs */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}

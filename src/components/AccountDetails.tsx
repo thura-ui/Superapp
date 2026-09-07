@@ -183,7 +183,7 @@ const handleEditProfileSubmit = async (e: React.FormEvent) => {
 
   const displayData = {
     name: userData?.name || 'Simless User',
-    email: userData?.email || 'user@gmail.com',
+    email: userData?.email || 'user@email.com',
     phone: userData?.phone || '+1234567890',
   };
 
@@ -363,7 +363,7 @@ const handleEditProfileSubmit = async (e: React.FormEvent) => {
               </div>
               
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 font-['Poppins']">{t('gmailAddress', 'အီးမေးလ် လိပ်စာ')}</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 font-['Poppins']">{t('emailAddress', 'အီးမေးလ် လိပ်စာ')}</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-600" />
                   <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-800 focus:outline-none focus:border-blue-600 transition-colors font-['Poppins']" required />

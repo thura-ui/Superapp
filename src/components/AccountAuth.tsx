@@ -232,7 +232,7 @@ export default function AccountAuth({
                 {/* Email Field */}
                 <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
-                  <input type="email" placeholder="Gmail Address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required />
+                  <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required />
                 </div>
 
                 {/* Password Fields */}

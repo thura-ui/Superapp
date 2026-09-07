@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchBanners, type BannerItem } from '../lib/bannersApi';
 import { fetchProducts, type ProductItem } from '../lib/productsApi';
+import { fetchBanners, type BannerItem } from '../lib/bannersApi';
 import type { Country } from '../types';
 
 interface HomeBannerCarouselProps {
@@ -30,7 +30,8 @@ const mapProductToCountry = (product: ProductItem): Country => {
     id: product.slug,
     name: product.name,
     code: regionCode,
-    flagUrl: product.country_flag_url || product.flag_url,
+    // 🌟 API မှ ပါလာသော flag_image, country_flag_url, flag_url များကို သေချာစွာ ချိတ်ဆက်ပေးထားပါသည်
+    flagUrl: product.flag_image || product.country_flag_url || product.flag_url,
     type: mappedType,
     popular: Boolean(product.is_popular || product.popular || product.featured),
   };
@@ -62,7 +63,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
   useEffect(() => {
     fetchBanners()
       .then((items) => {
-        // 🌟 is_active: true ဖြစ်တဲ့ Banner များကိုသာ စစ်ထုတ်ပြီး သိမ်းဆည်းပါသည်
         const activeBanners = items.filter(b => b.is_active !== false);
         setBanners(activeBanners);
       })
@@ -104,7 +104,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
   }, [activeIndex, slideCount]);
 
   useEffect(() => {
-    const trimmed = searchQuery.trim();
+    const trimmed = searchQuery.trim().toLowerCase();
     if (!trimmed) {
       setSearchResults([]);
       setSearchLoading(false);
@@ -113,9 +113,22 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
 
     setSearchLoading(true);
     const timer = window.setTimeout(() => {
-      fetchProducts({ search: trimmed, perPage: 8 })
-        .then((products) => setSearchResults(products.map(mapProductToCountry)))
-        .catch(() => setSearchResults([]))
+      fetchProducts({ type: 'country', search: trimmed, perPage: 20 })
+        .then((res: any) => {
+          const productList = res?.items || [];
+          const mapped = productList.map(mapProductToCountry);
+          
+          const filtered = mapped.filter((country: Country) =>
+            country.name.toLowerCase().includes(trimmed) ||
+            country.id.toLowerCase().includes(trimmed)
+          );
+          
+          setSearchResults(filtered.length > 0 ? filtered : mapped);
+        })
+        .catch((err) => {
+          console.error("Search fetch error:", err);
+          setSearchResults([]);
+        })
         .finally(() => setSearchLoading(false));
     }, SEARCH_DEBOUNCE_MS);
 
@@ -182,41 +195,60 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
   };
 
   const renderSearchBar = (customClass = "") => (
-    <div ref={searchRef} className={`relative w-full z-40 ${customClass}`}>
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 sm:text-white drop-shadow-[0_1px_3px_rgba(15,23,42,0.1)] pointer-events-none z-10" />
+    <div ref={searchRef} className={`relative w-full z-50 ${customClass}`}>
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none z-10" />
       <input
-        type="text"
+        type="search"
+        name="search_destination_input"
+        id="search_destination_input"
         value={searchQuery}
         placeholder="Search Your Destination"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck="false"
+        data-lpignore="true"
         onFocus={() => setShowSuggestions(true)}
         onChange={(event) => {
           setSearchQuery(event.target.value);
           setShowSuggestions(true);
         }}
-        className="w-full pl-11 pr-5 py-3 sm:py-3.5 bg-white sm:bg-white/20 backdrop-blur-md border border-solid border-slate-200 sm:border-white/40 rounded-2xl text-slate-700 placeholder-slate-400 sm:placeholder-slate-700/50 font-black text-xs sm:text-sm focus:outline-none focus:border-blue-500 sm:focus:border-cyan-400 focus:bg-white sm:focus:bg-white/30 tracking-wide transition-all shadow-sm sm:shadow-none"
+        className="w-full pl-11 pr-5 py-3 sm:py-3.5 bg-white border border-solid border-slate-300 rounded-2xl text-slate-800 placeholder-slate-400 font-bold text-xs sm:text-sm focus:outline-none focus:border-blue-500 tracking-wide transition-all shadow-md"
       />
       {showSuggestions && searchQuery.trim() && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-slate-900/95 backdrop-blur-2xl rounded-2xl border border-solid border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.45)] overflow-hidden max-h-56 overflow-y-auto scrollbar-hide">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl border border-solid border-slate-200 shadow-[0_15px_35px_rgba(0,0,0,0.2)] overflow-hidden max-h-56 overflow-y-auto scrollbar-hide">
           {searchLoading ? (
-            <div className="px-4 py-3 text-xs text-white/60 font-bold">Searching...</div>
+            <div className="px-4 py-3 text-xs text-slate-500 font-bold">Searching...</div>
           ) : searchResults.length > 0 ? (
             searchResults.map((country) => (
               <button
                 key={country.id}
                 type="button"
                 onClick={() => handleSelectCountry(country)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-0 border-b border-solid border-white/5 last:border-b-0 cursor-pointer text-white"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-100 transition-colors border-0 border-b border-solid border-slate-100 last:border-b-0 cursor-pointer text-slate-800"
               >
+                {/* 🌟 နိုင်ငံအလံ ပုံရိပ်အား API Image ဖြင့် တိုက်ရိုက်ပြသခြင်း */}
                 {country.flagUrl ? (
-                  <img src={country.flagUrl} alt="" className="w-5 h-5 rounded object-contain" />
+                  <img 
+                    src={country.flagUrl} 
+                    alt={country.name} 
+                    className="w-6 h-6 rounded-full object-cover shrink-0 border border-slate-200 shadow-xs" 
+                  />
                 ) : (
-                  <span className="w-5 h-5 flex items-center justify-center text-sm">🌍</span>
+                  <div className="w-6 h-6 rounded-full bg-blue-50 border border-slate-200 flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-blue-600">
+                      {country.code !== 'UN' ? country.code : 'ESIM'}
+                    </span>
+                  </div>
                 )}
-                <span className="font-black text-xs sm:text-sm tracking-wide">{country.name}</span>
+                
+                <span className="font-bold text-xs sm:text-sm tracking-wide text-slate-800 truncate">
+                  {country.name}
+                </span>
               </button>
             ))
           ) : (
-            <div className="px-4 py-3 text-xs text-white/60 font-bold">No countries found.</div>
+            <div className="px-4 py-3 text-xs text-slate-500 font-bold">No countries found.</div>
           )}
         </div>
       )}
@@ -225,18 +257,16 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
 
   return (
     <section
-      className="relative overflow-hidden w-full pb-6 sm:pb-10 select-none z-0"
+      className="relative overflow-visible w-full pb-6 sm:pb-10 select-none z-30"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Full-Width Screen Banner Container */}
       <div 
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="relative overflow-hidden w-full bg-white group/carousel transition-all duration-300"
       >
-        
         {bannerLoaded && slideCount === 0 && (
           <div className="w-full h-36 sm:h-80 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center p-6 sm:p-10">
             <h1 className="text-sm sm:text-xl text-white font-bold">Banner data is currently unavailable.</h1>
@@ -255,11 +285,9 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
               <img
                 src={banner.image_url}
                 alt=""
-                /* 🌟 min-h ကို Normal Aspect Ratio ဖြစ်အောင် ချိန်ညှိထားပါသည် */
                 className="w-full h-auto min-h-[180px] sm:min-h-[440px] lg:min-h-[520px] block object-cover object-center"
               />
               
-              {/* ID=2 Banner ပေါ်တွင် Search Bar သီးသန့်တင်ပေးခြင်း */}
               {banner.id === 2 && (
                 <div className="hidden sm:flex absolute inset-0 z-10 pointer-events-none">
                   <div className="flex flex-col justify-center items-start pl-16 md:pl-20 lg:pl-24 w-1/2">
@@ -273,7 +301,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
           ))}
         </div>
 
-        {/* Left/Right Arrow Navigation */}
         {slideCount > 1 && (
           <>
             <div className="absolute bottom-4 sm:bottom-10 md:bottom-12 left-3 sm:left-10 lg:left-14 z-20 pointer-events-none hidden sm:block">
@@ -300,7 +327,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
           </>
         )}
 
-        {/* Carousel Indicator Dots */}
         {slideCount > 1 && (
           <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
             {displayBanners.map((banner, index) => (
@@ -320,9 +346,8 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
         )}
       </div>
 
-      {/* Mobile Search Bar */}
       {isMobile && (
-        <div className="block sm:hidden mt-4 px-4">
+        <div className="block sm:hidden mt-4 px-4 relative z-40">
           {renderSearchBar()}
         </div>
       )}

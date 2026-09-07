@@ -90,7 +90,7 @@ export default function AccountAuth({ onAuthSuccess, onBack }: AccountAuthProps)
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-3xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
             <input
               type="email"
-              placeholder="Enter Gmail"
+              placeholder="Enter Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="relative w-full pl-14 pr-5 py-5 bg-white/70 backdrop-blur-2xl border-2 border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-xl font-bold text-sky-800 placeholder:text-sky-500 placeholder:font-medium transition-all"

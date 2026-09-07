@@ -186,7 +186,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
           throw new Error("API Base URL is not defined in the environment variables.");
         }
 
-        // 🔴 Anti-Cache URL Parameter & Headers Generator
         const timestamp = new Date().getTime();
         const appendAntiCache = (url: string) => `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
         
@@ -210,7 +209,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
         const termsData = await termsRes.json();
         const privacyData = await privacyRes.json();
 
-        // FAQs Data
         const faqList = Array.isArray(faqsData) ? faqsData : (faqsData?.data || []);
         const formattedFaqs: InfoItem[] = faqList.map((item: any) => ({
           id: `faq-${item.id}`,
@@ -219,7 +217,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
           isHtml: true 
         }));
 
-        // Categories သတ်မှတ်ခြင်း
         const fetchedCategories: CategoryData[] = [
           {
             name: 'FAQs',
@@ -275,7 +272,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Step 4 Banners
   const stepBanners = [
     { id: 1, src: '/steps-banner1.png', alt: 'Check Compatibility' },
     { id: 2, src: '/steps-banner2.png', alt: 'Select a Plan' },
@@ -283,7 +279,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     { id: 4, src: '/steps-banner4.png', alt: 'Stay Connected' },
   ];
 
-  // Benefits Cards Data
   const benefitCards = [
     { 
       id: 1, 
@@ -323,7 +318,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     },
   ];
 
-  // Clean Interactive Review Data
   const userReviews = [
     {
       id: 1,
@@ -438,10 +432,9 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
       <HomeBannerCarousel onExplorePlans={() => onExplorePlans()} onSelectCountry={onSelectCountry} />
 
       {/* Trending eSIM plan Section */}
-      <section className="pt-2 sm:pt-16 pb-8 transform-gpu">
+      <section className="pt-2 sm:pt-16 pb-8 transform-gpu relative z-10">
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Trending eSIM Plans Header */}
           <motion.h3 
             initial={{ opacity: 0, y: -15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -636,7 +629,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
         </div>
       </section>
 
-{/* What is eSIM Section */}
+      {/* What is eSIM Section */}
       <section id="what-is-esim-section" className="py-4 sm:py-10 w-full relative z-10 transform-gpu overflow-hidden">
         <div className="w-full max-w-6xl mx-auto px-1 sm:px-6 lg:px-8">
           <motion.div 
@@ -646,7 +639,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             viewport={{ once: false, amount: 0.2 }}
             className="w-full relative overflow-hidden"
           >
-            {/* Desktop View Image */}
             <div className="hidden md:flex w-full justify-center">
               <img 
                 src={i18n.language === 'my' ? "/whatiseSIM-web-burmese.jpg" : "/whatiseSIM-web-english.jpg"} 
@@ -655,10 +647,9 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
               />
             </div>
 
-            {/* 🔴 Mobile View Image - Size ကို အကန့်အသတ်မရှိ အကြီးဆုံးဖြစ်အောင် scale-105 ပါ ထည့်သွင်းထားပါသည် 🔴 */}
             <div className="flex md:hidden w-full justify-center px-0 py-1 overflow-hidden">
               <img 
-                src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng.png"} 
+                src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng1.png"} 
                 alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
                 className="w-full h-auto object-contain rounded-xl shadow-xs scale-105 transition-transform duration-300"
               />
@@ -791,7 +782,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             </p>
           </motion.div>
 
-          {/* MOBILE VIEW */}
           <div className="block md:hidden w-full overflow-hidden relative">
             <div 
               onTouchStart={handleReviewTouchStart}
@@ -858,7 +848,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             </div>
           </div>
 
-          {/* DESKTOP VIEW */}
           <div className="hidden md:block columns-2 lg:columns-3 gap-6 space-y-6 max-w-5xl mx-auto">
             <motion.div 
               initial={{ opacity: 0, x: -60, y: 40 }}
@@ -1152,7 +1141,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
                     }`}
                   >
                     <div className="relative">
-                      {/* Question Header */}
                       <button
                         type="button"
                         onClick={() => toggleExpand(item.id)}
@@ -1173,7 +1161,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
                         />
                       </button>
 
-                      {/* Answer Content Dropdown */}
                       <AnimatePresence>
                         {isExpanded && (
                           <motion.div 
