@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Check, ChevronDown, Globe, Sun, Package, Wifi, Infinity as InfinityIcon, Smartphone } from 'lucide-react'; 
+import { ChevronLeft, Check, ChevronDown, Globe, Sun, Package, Wifi, Infinity as InfinityIcon, Smartphone, Zap } from 'lucide-react'; 
 import { fetchProductBySlug, type ProductVariation } from '../lib/productsApi';
 import { addToCart, clearCart } from '../lib/cartApi'; 
 import type { Country, GlobalPlan } from '../types';
@@ -144,7 +144,10 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
   
   const [showEsimCheckDrawer, setShowEsimCheckDrawer] = useState(false);
   const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [showActivateGuide, setShowActivateGuide] = useState(false);
+
   const [activeDeviceTab, setActiveDeviceTab] = useState<'ios' | 'samsung' | 'android'>('ios');
+  const [activeActivateDeviceTab, setActiveActivateDeviceTab] = useState<'ios' | 'samsung'>('ios');
 
   const [activePlanTab, setActivePlanTab] = useState<'daypass' | 'fixed' | 'unlimited'>('daypass');
   const [ordering, setOrdering] = useState(false);
@@ -457,9 +460,9 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
   const availableCategoriesCount = [hasFixedPlans, hasDayPassPlans, hasUnlimitedPlans].filter(Boolean).length;
 
-  // 🔴 🌟 DayPass, Fixed Bundles, Unlimited တို့၏ Tab Style အတိုင်း ပြင်ဆင်ထားသော Reusable Guide Accordion Component 🌟 🔴
+  // 🔴 🌟 How to Install eSIM Accordion Component 🌟 🔴
   const InstallGuideAccordion = () => (
-    <div className="w-full pt-1 border-t border-blue-100">
+    <div className="w-full pt-1">
       <button
         type="button"
         onClick={() => setShowInstallGuide(!showInstallGuide)}
@@ -480,10 +483,9 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
       {showInstallGuide && (
         <div className="mt-2.5 p-3.5 sm:p-4 bg-white border border-blue-200 rounded-2xl space-y-3 sm:space-y-3.5 animate-in slide-in-from-top-2 fade-in duration-200 font-['Poppins']">
           <div className="p-2.5 sm:p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-[10.5px] sm:text-xs text-amber-900 font-medium leading-relaxed">
-            <strong className="font-bold">Note:</strong> To properly download an eSIM to your device, a stable internet connection is necessary, preferably using Wi-Fi or mobile data. If network access is successful but there is no network connection, please check and manually set the APN.
+            <strong className="font-bold">Note:</strong> Install your eSIM 1 or 2 days before your trip. A stable connection is necessary, preferably using WiFi or Mobile Data.
           </div>
 
-          {/* 🔴 DayPass Tab Style အတိုင်း ပြိုင်တူညီညာဖြစ်အောင် ပြုလုပ်ထားသော Device Tabs Bar 🔴 */}
           <div className="grid grid-cols-3 gap-1 rounded-xl bg-blue-50/60 border border-blue-200 p-1 shadow-none w-full font-['Poppins']">
             <button
               type="button"
@@ -494,7 +496,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
               }`}
             >
-            <h4 className="whitespace-nowrap text-[10px] sm:text-[13px]">  iOS </h4>
+              <h4 className="whitespace-nowrap text-[10px] sm:text-[13px]">iOS</h4>
             </button>
             <button
               type="button"
@@ -505,7 +507,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
               }`}
             >
-            <h4 className="whitespace-nowrap font-bold text-[10px] sm:text-[13px]">  Samsung </h4>
+              <h4 className="whitespace-nowrap font-bold text-[10px] sm:text-[13px]">Samsung</h4>
             </button>
             <button
               type="button"
@@ -520,7 +522,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
             </button>
           </div>
 
-          {/* Step Details Content */}
           <div className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-medium pt-1">
             {activeDeviceTab === 'ios' && (
               <div className="space-y-1.5 sm:space-y-2">
@@ -528,8 +529,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                 <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
                   <li>Choose <strong>Use QR code</strong>, then scan the QR code from another device.</li>
                   <li>Tap <strong>Activate eSIM</strong>, then tap <strong>Continue</strong> and complete installation steps.</li>
-                  <li>Choose <strong>ONLY Simless travel eSIM</strong>, enable <strong>Turn On This Line</strong>, and turn on <strong>Data Roaming</strong>.</li>
-                  <li>Turn <strong>OFF</strong> primary line and other lines. Enable data roaming <strong>ONLY on travel eSIM</strong>. <em>(Important)</em></li>
+                  <li>eSIM will not be <strong>activated</strong> in Myanmar. You can only install it first.</li>
                 </ol>
               </div>
             )}
@@ -540,8 +540,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                 <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
                   <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
                   <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
-                  <li>Under preferred SIMs, go to <strong>Mobile Data</strong> and choose <strong>Simless travel eSIM</strong>.</li>
-                  <li>Go back to <strong>Settings &gt; Connections &gt; Mobile networks</strong>, then <strong>Turn On Data roaming</strong>.</li>
+                  <li>eSIM will not be <strong>activated</strong> in Myanmar. You can only install it first.</li>
                 </ol>
               </div>
             )}
@@ -551,12 +550,93 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                 <p className="font-bold text-slate-900">Go to Settings &gt; Mobile Network &gt; Manage eSIM &gt; Add eSIM</p>
                 <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
                   <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
+                  <li>eSIM will not be <strong>activated</strong> in Myanmar. You can only install it first.</li>
                   <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
-                  <li>Go back to <strong>Settings &gt; Mobile Network &gt; Data Roaming</strong> &gt; Turn on <strong>Data roaming</strong>.</li>
                 </ol>
               </div>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // 🔴 🌟 How to Activate eSIM Accordion Component (New Added) 🌟 🔴
+  const EsimActivateAccordion = () => (
+    <div className="w-full pt-1 border-t border-blue-100 font-['Poppins']">
+      <button
+        type="button"
+        onClick={() => setShowActivateGuide(!showActivateGuide)}
+        className="w-full flex items-center justify-between p-3 sm:p-3.5 bg-blue-50/50 hover:bg-blue-50 border border-blue-200/80 rounded-2xl transition-all cursor-pointer outline-none font-['Poppins'] text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-[12px] sm:text-[13px] font-bold text-slate-900">How to activate eSIM?</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">Steps to turn on travel eSIM on arrival</p>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-blue-500 transition-transform duration-300 ${showActivateGuide ? 'rotate-180' : ''}`} />
+      </button>
+
+      {showActivateGuide && (
+        <div className="mt-2.5 p-3.5 sm:p-4 bg-white border border-blue-200 rounded-2xl space-y-3 animate-in slide-in-from-top-2 fade-in duration-200 font-['Poppins']">
+          
+          {/* Device Tabs Bar (iPhone / Samsung) */}
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-blue-50/60 border border-blue-200 p-1 w-full font-['Poppins']">
+            <button
+              type="button"
+              onClick={() => setActiveActivateDeviceTab('ios')}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg font-bold text-[10px] sm:text-[12px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center font-['Poppins'] ${
+                activeActivateDeviceTab === 'ios' 
+                  ? 'bg-blue-100 border border-blue-300 text-blue-700 shadow-none' 
+                  : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
+              }`}
+            >
+              iPhone
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveActivateDeviceTab('samsung')}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg font-bold text-[10px] sm:text-[12px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center font-['Poppins'] ${
+                activeActivateDeviceTab === 'samsung' 
+                  ? 'bg-blue-100 border border-blue-300 text-blue-700 shadow-none' 
+                  : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
+              }`}
+            >
+              Samsung
+            </button>
+          </div>
+
+          {/* Activation Step Details */}
+          <div className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-medium pt-1">
+            {activeActivateDeviceTab === 'ios' && (
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="font-bold text-slate-900">
+                  Go to Settings &gt; Cellular or Mobile Service &gt; Under SIMs
+                </p>
+                <ul className="list-disc pl-4 space-y-1 sm:space-y-1.5">
+                  <li>Off all Myanmar lines.</li>
+                  <li>Only on <strong>travel eSIM line</strong> and <strong>On Data Roaming</strong>.</li>
+                </ul>
+              </div>
+            )}
+
+            {activeActivateDeviceTab === 'samsung' && (
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="font-bold text-slate-900">
+                  Go to Settings &gt; Connections &gt; SIM Manager
+                </p>
+                <ul className="list-disc pl-4 space-y-1 sm:space-y-1.5">
+                  <li>Off Myanmar SIMs and eSIMs.</li>
+                  <li>Only on <strong>travel eSIM line</strong> and <strong>On Data Roaming</strong>.</li>
+                </ul>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </div>
@@ -572,7 +652,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
           {/* LEFT SIDE */}
           <div className="md:col-span-5 space-y-3 sm:space-y-4 w-full">
             
-            {/* 🌟 1. BACK BUTTON SECTION */}
+            {/* 1. BACK BUTTON SECTION */}
             <div className={`w-full flex items-center transition-all duration-300 pb-1 ${
               isRegionOrGlobal 
                 ? 'justify-start pl-0 sm:pl-6' 
@@ -618,7 +698,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
               </div>
             </div>
 
-            {/* 🌟 2. DESTINATION SECTION */}
+            {/* 2. DESTINATION SECTION */}
             <div className={`w-full px-0 text-left space-y-1.5 transition-all duration-300 ${
               isRegionOrGlobal ? 'pl-0 sm:pl-5' : 'pl-0'
             }`}>
@@ -661,7 +741,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
               )}
             </div>
 
-            {/* 🌟 3. COVERAGE AND NETWORK SECTION */}
+            {/* 3. COVERAGE AND NETWORK SECTION */}
             {activeDescription && (
               <div className={`md:col-span-5 space-y-3 sm:space-y-4 w-full transition-all duration-300 ${
                 isRegionOrGlobal 
@@ -831,7 +911,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   })}
                 </div>
 
-                {/* Desktop Buy Button, Check Compatibility & How to Install eSIM */}
+                {/* Desktop Buy Button, Check Compatibility, Install & Activate Guides */}
                 <div className="hidden sm:flex flex-col items-center gap-3 pt-2">
                   <button
                     type="button"
@@ -852,9 +932,12 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
                   {/* Desktop Installation Guide Accordion */}
                   <InstallGuideAccordion />
+
+                  {/* Desktop Activation Guide Accordion (New Added) */}
+                  <EsimActivateAccordion />
                 </div>
 
-                {/* Mobile View Installation Guide */}
+                {/* Mobile View Guides */}
                 <div className="block sm:hidden pt-3 space-y-3">
                   <button
                     type="button"
@@ -865,6 +948,9 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   </button>
 
                   <InstallGuideAccordion />
+
+                  {/* Mobile Activation Guide Accordion (New Added) */}
+                  <EsimActivateAccordion />
                 </div>
 
               </div>

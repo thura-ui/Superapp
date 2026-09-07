@@ -658,7 +658,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             {/* 🔴 Mobile View Image - Size ကို အကန့်အသတ်မရှိ အကြီးဆုံးဖြစ်အောင် scale-105 ပါ ထည့်သွင်းထားပါသည် 🔴 */}
             <div className="flex md:hidden w-full justify-center px-0 py-1 overflow-hidden">
               <img 
-                src={i18n.language === 'my' ? "/whatis-eSIM-mobile-burmese02.jpg" : "/whatis-eSIM-mobile-eng02.jpg"} 
+                src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng.png"} 
                 alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
                 className="w-full h-auto object-contain rounded-xl shadow-xs scale-105 transition-transform duration-300"
               />
