@@ -320,7 +320,19 @@ const resources = {
       faqDesc: 'Find instant answers, terms, and policies regarding Simless travel eSIM.',
       loadingData: 'Loading data...',
       configError: 'Configuration error: API Base URL is missing. Please check your .env file.',
-      networkError: 'Unable to load data. Please check your network connection or try again later.'
+      networkError: 'Unable to load data. Please check your network connection or try again later.',
+    
+      //Simless Spark Loyalty Program
+      whatIsSparkTitle: "What is Spark?",
+      sparkSubTitle: "Simless Loyalty Reward Points System",
+      sparkRateTitle: "Conversion Rate & Earning",
+      sparkRateDesc: "Every 4,500 MMK spent earns 1 Spark.",
+      sparkUsageTitle: "How to Use",
+      sparkUsageDesc: "Earned Sparks can be directly used to redeem Data Packages.",
+      sparkExpiryNotice: "Important Expiry Notice",
+      sparkExpiryDetail: "Sparks are valid for 1 year. All Sparks earned within a calendar year expire on January 1st of the following year.",
+      exampleLabel: "Example:",
+      sparkExpiryExample: "Sparks earned on 2025-01-01 will expire on 2026-01-01, and Sparks earned on 2025-10-10 will also expire on 2026-01-01."
     }
   },
 
@@ -638,7 +650,18 @@ const resources = {
       faqDesc: 'Simless travel eSIM နှင့် ပတ်သက်သော အမေး/အဖြေများ၊ စည်းကမ်းချက်များနှင့် မူဝါဒများကို ဤနေရာတွင် ရှာဖွေနိုင်ပါသည်။',
       loadingData: 'အချက်အလက်များ ရယူနေပါသည်...',
       configError: 'စနစ်ကိုပြုပြင်နေပါတယ် ခနစောင့်ပေးပါ။',
-      networkError: 'အချက်အလက်များ ရယူ၍ မရပါ။ အင်တာနက် လိုင်းချိတ်ဆက်မှုကို စစ်ဆေးပြီး ပြန်လည် ကြိုးစားပါ။'
+      networkError: 'အချက်အလက်များ ရယူ၍ မရပါ။ အင်တာနက် လိုင်းချိတ်ဆက်မှုကို စစ်ဆေးပြီး ပြန်လည် ကြိုးစားပါ။',
+
+      whatIsSparkTitle: "Spark ဆိုတာဘာလဲ။",
+      sparkSubTitle: "Simless Reward Points စနစ်",
+      sparkRateTitle: "တန်ဖိုးနှင့် ရရှိနိုင်မှု",
+      sparkRateDesc: "၄,5၀၀ ကျပ်ဖိုး ဝယ်ယူတိုင်း ၁ Spark ရရှိမည်ဖြစ်ပါသည်။",
+      sparkUsageTitle: "အသုံးပြုပုံ",
+      sparkUsageDesc: "ရရှိထားသော Spark များကို Data Packages များ ဝယ်ယူရာတွင် တိုက်ရိုက် လဲလှယ်သုံးစွဲနိုင်ပါသည်။",
+      sparkExpiryNotice: "သတိပြုရန် - Spark သက်တမ်း",
+      sparkExpiryDetail: "Spark များကို ၁ နှစ်တာ သက်တမ်း ပေးထားပါသည်။ ဝယ်ယူရရှိခဲ့သည့် သက္ကရာဇ်နှစ်အလိုက် နောက်တစ်နှစ် ဇန်နဝါရီ ၁ ရက်နေ့တွင် Spark များ သက်တမ်းကုန်ဆုံးမည် ဖြစ်ပါသည်။",
+      exampleLabel: "ဥပမာ -",
+      sparkExpiryExample: "၂၀၂၅-၁-၁ ရက်နေ့တွင် ဝယ်ယူရရှိခဲ့သော Spark များသည် ၂၀၂၆-၁-၁ ရက်နေ့တွင် သက်တမ်းကုန်ဆုံးမည်ဖြစ်သလို၊ ၂၀၂၅-၁၀-၁၀ ရက်နေ့က ဝယ်ယူခဲ့သော Spark များသည်လည်း ၂၀၂၆-၁-၁ ရက်နေ့တွင် သက်တမ်းကုန်ဆုံးမည် ဖြစ်ပါသည်။"
     }
   }
 };

@@ -636,9 +636,9 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
         </div>
       </section>
 
-      {/* What is eSIM Section */}
-      <section id="what-is-esim-section" className="py-6 sm:py-10 w-full relative z-10 transform-gpu overflow-hidden">
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+{/* What is eSIM Section */}
+      <section id="what-is-esim-section" className="py-4 sm:py-10 w-full relative z-10 transform-gpu overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto px-1 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -646,6 +646,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             viewport={{ once: false, amount: 0.2 }}
             className="w-full relative overflow-hidden"
           >
+            {/* Desktop View Image */}
             <div className="hidden md:flex w-full justify-center">
               <img 
                 src={i18n.language === 'my' ? "/whatis-eSIM-burmese02.jpg" : "/whatis-eSIM-eng02.jpg"} 
@@ -654,11 +655,12 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
               />
             </div>
 
-            <div className="flex md:hidden w-full justify-center px-2 py-4">
+            {/* 🔴 Mobile View Image - Size ကို အကန့်အသတ်မရှိ အကြီးဆုံးဖြစ်အောင် scale-105 ပါ ထည့်သွင်းထားပါသည် 🔴 */}
+            <div className="flex md:hidden w-full justify-center px-0 py-1 overflow-hidden">
               <img 
                 src={i18n.language === 'my' ? "/whatis-eSIM-mobile-burmese02.jpg" : "/whatis-eSIM-mobile-eng02.jpg"} 
                 alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
-                className="w-full h-auto max-w-md object-contain rounded-2xl"
+                className="w-full h-auto object-contain rounded-xl shadow-xs scale-105 transition-transform duration-300"
               />
             </div>
           </motion.div>

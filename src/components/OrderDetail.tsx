@@ -158,10 +158,20 @@ export default function OrderDetail({
     }
   };
 
+  // 🔴 Description စာသားများ ပျက်မနေစေဘဲ စာကြောင်းအသစ် လှပစွာ ခုန်ပေးမည့် Helper Function
+  const formatDescriptionHtml = (rawHtml?: string) => {
+    if (!rawHtml) return '';
+    return rawHtml
+      .replace(/\r\n/g, '<br />')
+      .replace(/\n/g, '<br />')
+      .replace(/\*Coverage/g, '<br />*Coverage')
+      .replace(/\*Hotspot/g, '<br />*Hotspot');
+  };
+
   const isCancelled = order?.status?.toLowerCase() === 'cancelled' || order?.status?.toLowerCase() === 'failed';
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20 sm:pb-24 relative selection:bg-blue-500/10 font-['Poppins'] pt-[85px] sm:pt-[105px] mobile-typography-fix">
+    <div className="min-h-screen bg-slate-50/60 pb-20 sm:pb-24 relative selection:bg-blue-500/10 font-['Poppins'] pt-[90px] sm:pt-[110px] mobile-typography-fix">
       
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[5%] right-[10%] w-[35%] h-[35%] bg-blue-500/5 rounded-full blur-[100px]" />
@@ -174,13 +184,14 @@ export default function OrderDetail({
         <div className="flex items-center justify-between mb-4 sm:mb-8 pt-1 sm:pt-2">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-xs cursor-pointer font-['Poppins'] active:scale-95"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-xs cursor-pointer font-['Poppins'] active:scale-95"
           >
             <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />
             <span>{t('backToOrders', 'Back to Orders')}</span>
           </button>
 
-          <span className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider font-['Poppins']">
+          {/* 🔴 Red Border အကွက် ဖြုတ်ပြီး Header စာသားကို သပ်ရပ်အောင် ပြင်ဆင်ထားပါသည် */}
+          <span className="text-xs sm:text-sm mt-1 font-bold text-slate-900 uppercase tracking-wider font-['Poppins'] px-3 py-1.5 bg-slate-100/80 rounded-lg">
             {t('orderDetail', 'Order Detail')}
           </span>
         </div>
@@ -249,7 +260,7 @@ export default function OrderDetail({
               </div>
 
               {/* Meta Data Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 bg-slate-50/70 p-3.5 sm:p-4 rounded-xl border border-slate-100/80 text-[11px] sm:text-sm font-['Poppins']">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-slate-50/70 p-3.5 sm:p-4 rounded-xl border border-slate-100/80 text-[11px] sm:text-sm font-['Poppins']">
                 
                 <div>
                   <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('paymentMethod', 'Payment Method')}</p>
@@ -273,9 +284,9 @@ export default function OrderDetail({
                   </p>
                 </div>
 
-                <div className="col-span-2 lg:col-span-2">
+                <div className="col-span-2 sm:col-span-1 lg:col-span-1">
                   <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('customerEmail', 'Customer Email')}</p>
-                  <p className="font-bold mt-0.5 sm:mt-1 truncate font-['Poppins'] text-blue-600">
+                  <p className="font-bold mt-0.5 sm:mt-1 font-['Poppins'] text-blue-600 break-all">
                     {order.customer_email || '-'}
                   </p>
                 </div>
@@ -330,12 +341,13 @@ export default function OrderDetail({
 
                     </div>
 
+                    {/* 🔴 Coverage & Details စာသားများ ပျက်မနေစေရန် ပြင်ထားပါသည် */}
                     {variation?.description && (
                       <div className="text-[11px] sm:text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 sm:p-4 rounded-xl border border-slate-100">
-                        <p className="font-semibold text-slate-400 uppercase tracking-wider text-[10px] sm:text-xs mb-1">{t('coverageAndDetails', 'Coverage & Details')}</p>
+                        <p className="font-semibold text-slate-400 uppercase tracking-wider text-[10px] sm:text-xs mb-1.5">{t('coverageAndDetails', 'Coverage & Details')}</p>
                         <div 
-                          className="prose prose-sm max-w-none space-y-1 font-['Poppins'] text-[11px] sm:text-sm font-medium text-slate-800"
-                          dangerouslySetInnerHTML={{ __html: variation.description }} 
+                          className="space-y-1.5 font-['Poppins'] text-[11px] sm:text-sm font-medium text-slate-800 leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: formatDescriptionHtml(variation.description) }} 
                         />
                       </div>
                     )}
@@ -458,6 +470,7 @@ export default function OrderDetail({
                 </div>
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold">{t('needHelpInstalling', 'Need Help Installing Your eSIM?')}</h4>
+                  <p className="text-[11px] sm:text-xs text-blue-200 font-medium mt-0.5">{t('needHelpInstallingDesc', 'Contact our 24/7 roaming support team for guidance.')}</p>
                 </div>
               </div>
 

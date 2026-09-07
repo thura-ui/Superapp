@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Check, ChevronDown, Globe, Sun, Package, Wifi, Infinity as InfinityIcon } from 'lucide-react'; 
+import { ChevronLeft, Check, ChevronDown, Globe, Sun, Package, Wifi, Infinity as InfinityIcon, Smartphone } from 'lucide-react'; 
 import { fetchProductBySlug, type ProductVariation } from '../lib/productsApi';
 import { addToCart, clearCart } from '../lib/cartApi'; 
 import type { Country, GlobalPlan } from '../types';
@@ -143,6 +143,8 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
   const [showCoverage, setShowCoverage] = useState(false); 
   
   const [showEsimCheckDrawer, setShowEsimCheckDrawer] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [activeDeviceTab, setActiveDeviceTab] = useState<'ios' | 'samsung' | 'android'>('ios');
 
   const [activePlanTab, setActivePlanTab] = useState<'daypass' | 'fixed' | 'unlimited'>('daypass');
   const [ordering, setOrdering] = useState(false);
@@ -455,8 +457,113 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
   const availableCategoriesCount = [hasFixedPlans, hasDayPassPlans, hasUnlimitedPlans].filter(Boolean).length;
 
+  // 🔴 🌟 DayPass, Fixed Bundles, Unlimited တို့၏ Tab Style အတိုင်း ပြင်ဆင်ထားသော Reusable Guide Accordion Component 🌟 🔴
+  const InstallGuideAccordion = () => (
+    <div className="w-full pt-1 border-t border-blue-100">
+      <button
+        type="button"
+        onClick={() => setShowInstallGuide(!showInstallGuide)}
+        className="w-full flex items-center justify-between p-3 sm:p-3.5 bg-blue-50/50 hover:bg-blue-50 border border-blue-200/80 rounded-2xl transition-all cursor-pointer outline-none font-['Poppins'] text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+            <Smartphone className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-[12px] sm:text-[13px] font-bold text-slate-900">How to install eSIM?</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">Stable Wi-Fi / Mobile Data required</p>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-blue-500 transition-transform duration-300 ${showInstallGuide ? 'rotate-180' : ''}`} />
+      </button>
+
+      {showInstallGuide && (
+        <div className="mt-2.5 p-3.5 sm:p-4 bg-white border border-blue-200 rounded-2xl space-y-3 sm:space-y-3.5 animate-in slide-in-from-top-2 fade-in duration-200 font-['Poppins']">
+          <div className="p-2.5 sm:p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-[10.5px] sm:text-xs text-amber-900 font-medium leading-relaxed">
+            <strong className="font-bold">Note:</strong> To properly download an eSIM to your device, a stable internet connection is necessary, preferably using Wi-Fi or mobile data. If network access is successful but there is no network connection, please check and manually set the APN.
+          </div>
+
+          {/* 🔴 DayPass Tab Style အတိုင်း ပြိုင်တူညီညာဖြစ်အောင် ပြုလုပ်ထားသော Device Tabs Bar 🔴 */}
+          <div className="grid grid-cols-3 gap-1 rounded-xl bg-blue-50/60 border border-blue-200 p-1 shadow-none w-full font-['Poppins']">
+            <button
+              type="button"
+              onClick={() => setActiveDeviceTab('ios')}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg font-bold text-[10px] sm:text-[12px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center font-['Poppins'] ${
+                activeDeviceTab === 'ios' 
+                  ? 'bg-blue-100 border border-blue-300 text-blue-700 shadow-none' 
+                  : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
+              }`}
+            >
+            <h4 className="whitespace-nowrap text-[10px] sm:text-[13px]">  iOS </h4>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveDeviceTab('samsung')}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg font-bold text-[10px] sm:text-[12px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center font-['Poppins'] ${
+                activeDeviceTab === 'samsung' 
+                  ? 'bg-blue-100 border border-blue-300 text-blue-700 shadow-none' 
+                  : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
+              }`}
+            >
+            <h4 className="whitespace-nowrap font-bold text-[10px] sm:text-[13px]">  Samsung </h4>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveDeviceTab('android')}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg font-bold text-[10px] sm:text-[12px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center font-['Poppins'] ${
+                activeDeviceTab === 'android' 
+                  ? 'bg-blue-100 border border-blue-300 text-blue-700 shadow-none' 
+                  : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
+              }`}
+            >
+              <h4 className="whitespace-nowrap text-[10px] sm:text-[13px]">Other Phones</h4>
+            </button>
+          </div>
+
+          {/* Step Details Content */}
+          <div className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-medium pt-1">
+            {activeDeviceTab === 'ios' && (
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="font-bold text-slate-900">Go to Settings &gt; Cellular / Mobile Data &gt; Add eSIM</p>
+                <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
+                  <li>Choose <strong>Use QR code</strong>, then scan the QR code from another device.</li>
+                  <li>Tap <strong>Activate eSIM</strong>, then tap <strong>Continue</strong> and complete installation steps.</li>
+                  <li>Choose <strong>ONLY Simless travel eSIM</strong>, enable <strong>Turn On This Line</strong>, and turn on <strong>Data Roaming</strong>.</li>
+                  <li>Turn <strong>OFF</strong> primary line and other lines. Enable data roaming <strong>ONLY on travel eSIM</strong>. <em>(Important)</em></li>
+                </ol>
+              </div>
+            )}
+
+            {activeDeviceTab === 'samsung' && (
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="font-bold text-slate-900">Go to Settings &gt; Connections &gt; SIM manager &gt; Add eSIM</p>
+                <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
+                  <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
+                  <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
+                  <li>Under preferred SIMs, go to <strong>Mobile Data</strong> and choose <strong>Simless travel eSIM</strong>.</li>
+                  <li>Go back to <strong>Settings &gt; Connections &gt; Mobile networks</strong>, then <strong>Turn On Data roaming</strong>.</li>
+                </ol>
+              </div>
+            )}
+
+            {activeDeviceTab === 'android' && (
+              <div className="space-y-1.5 sm:space-y-2">
+                <p className="font-bold text-slate-900">Go to Settings &gt; Mobile Network &gt; Manage eSIM &gt; Add eSIM</p>
+                <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
+                  <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
+                  <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
+                  <li>Go back to <strong>Settings &gt; Mobile Network &gt; Data Roaming</strong> &gt; Turn on <strong>Data roaming</strong>.</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="mobile-typography-fix w-full min-h-screen bg-white selection:bg-blue-100 py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-52 sm:pb-8 relative font-['Poppins'] text-slate-900">
+    <div className="mobile-typography-fix w-full min-h-screen bg-white selection:bg-blue-100 py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-10 sm:pb-8 relative font-['Poppins'] text-slate-900">
       <div className="max-w-6xl mx-auto space-y-3 sm:space-y-6">
         
         {/* Web Split Responsive Layout */}
@@ -473,10 +580,10 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
             }`}>
               <button 
                 onClick={handleBackClick} 
-                className="group px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white/80 backdrop-blur-md border border-blue-200 hover:border-blue-400 text-slate-700 hover:text-slate-900 hover:bg-white font-semibold text-[12px] sm:text-sm uppercase tracking-wide rounded-lg flex items-center gap-1.5 transition-all duration-300 shadow-xs active:scale-95 cursor-pointer outline-none font-['Poppins']"
+                className="group px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white/80 backdrop-blur-md border border-blue-200 hover:border-blue-400 text-slate-700 hover:text-slate-900 hover:bg-white font-semibold text-[12px] sm:text-sm uppercase tracking-wide rounded-lg flex items-center justify-center gap-0 transition-all duration-300 shadow-xs active:scale-95 cursor-pointer outline-none font-['Poppins']"
               >
-                <ChevronLeft className="w-4 h-4 text-blue-500 group-hover:text-blue-600 stroke-[2.5] transition-colors duration-300" /> 
-                {isPopularItem ? 'Back' : 'Back'}
+                <ChevronLeft className="w-4 h-4 text-blue-500 group-hover:text-blue-600 stroke-[2.5] transition-colors duration-300 shrink-0" /> 
+                <span className="leading-none">{isPopularItem ? 'Back' : 'Back'}</span>
               </button>
             </div>
 
@@ -638,7 +745,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                         : 'border border-transparent text-slate-600 hover:bg-blue-100/50 hover:text-blue-600'
                       }`}
                     >
-                      {/* 🔴 UNLIMITED Category Tab ဘေးတွင် အပြာရောင် Infinity Logo ကို သုံးထားပါသည် 🔴 */}
                       <InfinityIcon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 stroke-[2.5] ${
                         activePlanTab === 'unlimited' ? 'text-blue-600' : 'text-blue-500'
                       }`} />
@@ -725,7 +831,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   })}
                 </div>
 
-                {/* Desktop Buy Button & Check eSIM Compatibility Button */}
+                {/* Desktop Buy Button, Check Compatibility & How to Install eSIM */}
                 <div className="hidden sm:flex flex-col items-center gap-3 pt-2">
                   <button
                     type="button"
@@ -743,6 +849,22 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   >
                     Check eSIM Compatibility
                   </button>
+
+                  {/* Desktop Installation Guide Accordion */}
+                  <InstallGuideAccordion />
+                </div>
+
+                {/* Mobile View Installation Guide */}
+                <div className="block sm:hidden pt-3 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowEsimCheckDrawer(true)}
+                    className="w-full text-center text-xs font-semibold text-slate-600 hover:text-blue-600 underline underline-offset-4 tracking-wide transition-colors cursor-pointer bg-transparent border-none outline-none font-['Poppins'] py-1"
+                  >
+                    Check eSIM Compatibility
+                  </button>
+
+                  <InstallGuideAccordion />
                 </div>
 
               </div>

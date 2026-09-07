@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { User, LogOut, Zap, ChevronRight, X, Mail, Phone, Lock, Shield, BarChart3, ShoppingBag } from 'lucide-react';
 import { getCachedProfile, getProfile, getTotalSparks, updateProfile, changePasswordApi, type AuthProfile } from '../lib/authApi'; 
 import { fetchPopularProducts, type ProductItem } from '../lib/productsApi';
+import SparkInfoBox from './SparkInfoBox';
 import { showAlert } from '../lib/customAlert';
 import { useTranslation } from 'react-i18next';
 
@@ -120,7 +121,7 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
       .finally(() => setLoading(false));
   }, []);
 
-  const handleEditProfileSubmit = async (e: React.FormEvent) => {
+const handleEditProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormBusy(true);
     setFormError(null);
@@ -213,6 +214,7 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
     >
       <div className="max-w-5xl mx-auto space-y-6 relative z-10">
         
+        {/* Profile Header */}
         <div className="text-center mb-4">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-xl border-4 border-white">
             <User className="w-10 h-10 text-white" />
@@ -229,7 +231,7 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
 
-            {/* Point Balance, Package Redemption Status, Points Expiry Card Boxes */}
+            {/* Left Column: Point Balance, Package Status, Validity */}
             <div className="space-y-3 justify-between flex flex-col font-['Poppins']">
               
               <div className="bg-white/80 backdrop-blur-md border border-cyan-100/80 rounded-2xl p-3.5 shadow-xs flex items-center gap-3 flex-1">
@@ -268,7 +270,9 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
 
             </div>
 
+            {/* Right Column: Settings & History */}
             <div className="space-y-4 font-['Poppins'] flex flex-col justify-between">
+              
               {/* Account Settings Inner Glass Box */}
               <div className="bg-white/80 backdrop-blur-md border border-cyan-100/80 rounded-2xl p-4 shadow-xs flex-1">
                 <h4 className="text-base font-bold text-slate-900 mb-3 tracking-tight font-['Poppins']">{t('accountSettings', 'အကောင့် ဆက်တင်များ')}</h4>
@@ -321,11 +325,16 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
                   </button>
                 </div>
               </div>
+
             </div>
 
           </div>
         </div>
 
+        {/* 🌟 What is Spark Information Box 🌟 */}
+        <SparkInfoBox />
+
+        {/* Logout Button */}
         <div className="text-center pt-4">
           <button onClick={onLogout} className="inline-flex items-center gap-2 px-8 py-3 bg-rose-50 hover:bg-rose-100/70 border border-rose-200/50 rounded-2xl text-rose-600 font-bold text-xs uppercase tracking-widest transition-all cursor-pointer font-['Poppins']">
             <LogOut className="w-4 h-4" /> {t('logoutAccount', 'အကောင့်ထွက်မည်')}
@@ -334,6 +343,7 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
 
       </div>
 
+      {/* Edit Profile Modal */}
       {showEditProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200 font-['Poppins']">
           <div className="w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-100 p-6 md:p-8 space-y-5 animate-in zoom-in-95 duration-200">
@@ -376,6 +386,7 @@ export default function AccountDetails({ onLogout, onGoToOrders, onGoToSparkHist
         </div>
       )}
 
+      {/* Change Password Modal */}
       {showChangePasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200 font-['Poppins']">
           <div className="w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-slate-100 p-6 md:p-8 space-y-5 animate-in zoom-in-95 duration-200">
