@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Phone, Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import { register, login, forgotPasswordApi } from '../lib/authApi';
 import { showAlert } from '../lib/customAlert';
+import { useTranslation } from 'react-i18next';
 
 interface AccountAuthProps {
   onAuthSuccess: (isLoggedIn: boolean) => void;
@@ -17,6 +18,8 @@ export default function AccountAuth({
   initialMode = 'sign-in',
   isOpen = true 
 }: AccountAuthProps) {
+  const { t, i18n } = useTranslation();
+
   const [isSignUp, setIsSignUp] = useState(initialMode === 'sign-up');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   
@@ -29,12 +32,19 @@ export default function AccountAuth({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🌟 Login မှားယွင်းမှု အကြိမ်အရေအတွက်နှင့် အတိအကျ ၃ ကြိမ်မြောက်မှ ပိတ်မည့် State များ
+  // Email Format Error State
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutTimer, setLockoutTimer] = useState<number | null>(null);
   const [countdown, setCountdown] = useState(0);
 
-  // 🌟 Modal ပွင့်နေချိန်တွင် Navbar နှင့် Footer များကို အလိုအလျောက် ပုန်းဖျောက်ပေးမည့် Effect
+  // Email Format Validation Helper
+  const validateEmailFormat = (val: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(val);
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -53,7 +63,6 @@ export default function AccountAuth({
     };
   }, [isOpen]);
 
-  // 🌟 3 Seconds Countdown ထိန်းချုပ်မည့် Effect (၃ ကြိမ်မြောက်မှသာ အလုပ်လုပ်မည်)
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (lockoutTimer) {
@@ -65,7 +74,7 @@ export default function AccountAuth({
           if (currentRemaining <= 0) {
             setLockoutTimer(null);
             setCountdown(0);
-            setFailedAttempts(0); // ၃ စက္ကန့် စောင့်ပြီးပါက အကြိမ်အရေအတွက် Reset ပြန်လုပ်ပေးမည်
+            setFailedAttempts(0);
             clearInterval(timer);
           } else {
             setCountdown(currentRemaining);
@@ -83,21 +92,26 @@ export default function AccountAuth({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setEmailError(null);
 
-    // 🌟 စောင့်ဆိုင်းချိန် ၃ စက္ကန့် မပြည့်သေးပါက Submit ခလုတ်နှိပ်မရအောင် တားဆီးမည်
     if (lockoutTimer && Date.now() < lockoutTimer) {
       return;
     }
 
-    // FLOW ၁။ Forgot Password Request
+    // Email Validation စစ်ဆေးခြင်း
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !validateEmailFormat(trimmedEmail)) {
+      const msg = i18n.language?.startsWith('my')
+        ? 'အီးမေးလ်ပုံစံ မှားယွင်းနေပါသည်။'
+        : t('invalidEmailFormat', 'Invalid email format.');
+      setEmailError(msg);
+      return;
+    }
+
     if (isForgotPassword) {
-      if (!email.trim()) {
-        setError('Please enter your email address.');
-        return;
-      }
       setLoading(true);
       try {
-        const data = await forgotPasswordApi(email.trim().toLowerCase());
+        const data = await forgotPasswordApi(trimmedEmail);
         showAlert(data?.message || 'If an account exists with this email, a password reset link has been sent.');
         setIsForgotPassword(false);
       } catch (err: any) {
@@ -108,10 +122,22 @@ export default function AccountAuth({
       return;
     }
 
-    // FLOW ၂။ ပုံမှန် Sign In / Sign Up အပိုင်း
-    if (isSignUp && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    if (isSignUp) {
+      if (password !== confirmPassword) {
+        setError(t('passwordsDoNotMatch', 'Passwords do not match'));
+        return;
+      }
+
+      // Phone Number Validation (၉ လုံးမှ ၁၁ လုံးအထိ စစ်ဆေးခြင်း)
+      const cleanPhone = phoneNumber.trim().replace(/\D/g, '');
+      if (cleanPhone.length < 9 || cleanPhone.length > 11) {
+        const phoneErrorMsg = i18n.language?.startsWith('my') 
+          ? 'သင့်ဖုန်းနံပါတ် မှားယွင်းနေပါသည်။' 
+          : t('invalidPhoneNumber', 'Invalid phone number.');
+        
+        setError(phoneErrorMsg);
+        return;
+      }
     }
 
     setLoading(true);
@@ -119,7 +145,7 @@ export default function AccountAuth({
       if (isSignUp) {
         await register({
           name: userName.trim(),
-          email: email.trim().toLowerCase(),
+          email: trimmedEmail,
           phone: phoneNumber.trim(),
           password,
           password_confirmation: confirmPassword,
@@ -127,8 +153,7 @@ export default function AccountAuth({
         showAlert('registration-success');
         setIsSignUp(false);
       } else {
-        await login({ email: email.trim().toLowerCase(), password });
-        // Login အောင်မြင်သွားပါက Failed attempts အားလုံး Reset လုပ်မည်
+        await login({ email: trimmedEmail, password });
         setFailedAttempts(0);
         setLockoutTimer(null);
         showAlert('login-success', () => {
@@ -139,13 +164,11 @@ export default function AccountAuth({
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);
 
-      // 🔴 အတိအကျ ၃ ကြိမ်မြောက် မှားမှသာ ၃ စက္ကန့် ခလုတ် ပိတ်ထားမည် 🔴
       if (newAttempts >= 3) {
-        const lockDuration = 3000; // 3 seconds
+        const lockDuration = 3000;
         setLockoutTimer(Date.now() + lockDuration);
         setError('Too many failed attempts (3/3). Please wait 3 seconds.');
       } else {
-        // ၁ ကြိမ် သို့မဟုတ် ၂ ကြိမ်မြောက်တွင် စောင့်ခိုင်းခြင်းမရှိဘဲ မည်မျှမှားယွင်းကြောင်း စာသားသာပြသမည်
         setError(`${err.message || 'Authentication failed'} (${newAttempts}/3 attempts)`);
       }
     } finally {
@@ -157,7 +180,6 @@ export default function AccountAuth({
     setShowPassword(!showPassword);
   };
 
-  // 🔴 ခလုတ်အား Loading ဖြစ်ချိန် သို့မဟုတ် ၃ ကြိမ်မြောက်အမှားကြောင့် ၃ စက္ကန့် Countdown ပွင့်ချိန်မှသာ Disable လုပ်မည် 🔴
   const isButtonDisabled = loading || (lockoutTimer !== null && Date.now() < lockoutTimer);
 
   return (
@@ -183,10 +205,9 @@ export default function AccountAuth({
             {/* Header section */}
             <div className="relative flex items-center justify-center pt-6 px-6 pb-2">
               <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-500 text-center tracking-tight whitespace-nowrap">
-                {isForgotPassword ? 'Forgot Password' : isSignUp ? 'Create Account' : 'Welcome'}
+                {isForgotPassword ? t('forgotPassword', 'Forgot Password') : isSignUp ? t('createAccount', 'Create Account') : t('welcome', 'Welcome')}
               </h1>
 
-              {/* Close (X) Button */}
               <button 
                 type="button" 
                 onClick={onBack} 
@@ -198,7 +219,8 @@ export default function AccountAuth({
 
             {/* Form Content section */}
             <div className="p-6 pt-2">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {/* 🌟 noValidate ထည့်ထားသဖြင့် Browser ရဲ့ မလှမပ Native Tooltip Popup များ ပေါ်လာတော့မည်မဟုတ်ပါ */}
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 {error && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-rose-50 border border-rose-200 p-3 rounded-2xl backdrop-blur-md">
                     <p className="text-rose-600 text-xs sm:text-sm font-extrabold text-center uppercase tracking-widest">{error}</p>
@@ -209,66 +231,94 @@ export default function AccountAuth({
                 {isSignUp && !isForgotPassword && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
                     {/* User Name */}
-                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
-                      <input type="text" placeholder="User Name" value={userName} onChange={(e) => setUserName(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required={isSignUp} />
+                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all overflow-hidden">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 pointer-events-none z-10" />
+                      <input 
+                        type="text" 
+                        placeholder={t('userName', 'User Name')} 
+                        value={userName} 
+                        onChange={(e) => setUserName(e.target.value)} 
+                        className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none border-none outline-none ring-0 focus:ring-0 font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" 
+                      />
                     </div>
                     
                     {/* Phone Number */}
-                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
+                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all overflow-hidden">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 pointer-events-none z-10" />
                       <input 
                         type="tel" 
-                        placeholder="Phone Number" 
+                        placeholder={t('phoneNumber', 'Phone Number')} 
                         value={phoneNumber} 
-                        onChange={(e) => setPhoneNumber(e.target.value)} 
-                        className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" 
-                        required={isSignUp} 
+                        maxLength={11}
+                        onChange={(e) => {
+                          const onlyNums = e.target.value.replace(/\D/g, '');
+                          setPhoneNumber(onlyNums);
+                        }} 
+                        className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none border-none outline-none ring-0 focus:ring-0 font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" 
                       />
                     </div>
                   </motion.div>
                 )}
 
-                {/* Email Field */}
-                <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
-                  <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" required />
+                {/* Email Field & Custom Text Box Error */}
+                <div className="space-y-1">
+                  <div className={`relative group rounded-2xl sm:rounded-3xl bg-slate-50 border ${emailError ? 'border-rose-500' : 'border-slate-200'} focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all overflow-hidden`}>
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 pointer-events-none z-10" />
+                    <input 
+                      type="email" 
+                      placeholder={t('emailAddress', 'Email Address')} 
+                      value={email} 
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) {
+                          if (validateEmailFormat(e.target.value.trim())) {
+                            setEmailError(null);
+                          }
+                        }
+                      }} 
+                      className="w-full pl-12 pr-4 py-3.5 bg-transparent focus:outline-none border-none outline-none ring-0 focus:ring-0 font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400" 
+                    />
+                  </div>
+                  {/* 🌟 Text Box အောက်တွင် သပ်သပ်ရပ်ရပ် ပေါ်လာမည့် Error စာသား */}
+                  {emailError && (
+                    <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-rose-500 text-[11px] font-bold pl-3 pt-0.5">
+                      {emailError}
+                    </motion.p>
+                  )}
                 </div>
 
                 {/* Password Fields */}
                 {!isForgotPassword && (
                   <>
-                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
+                    <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all overflow-hidden">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 pointer-events-none z-10" />
                       <input 
                         type={showPassword ? 'text' : 'password'} 
-                        placeholder={isSignUp ? "New Password" : "Password"} 
+                        placeholder={isSignUp ? t('newPassword', 'New Password') : t('password', 'Password')} 
                         value={password} 
                         onChange={(e) => setPassword(e.target.value)} 
-                        className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
-                        required 
+                        className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none border-none outline-none ring-0 focus:ring-0 font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
                       />
-                      <button type="button" onClick={togglePasswordVisibility} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-sky-500 group-focus-within:text-blue-600 cursor-pointer bg-transparent border-none">
+                      <button type="button" onClick={togglePasswordVisibility} className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-sky-500 group-focus-within:text-blue-600 cursor-pointer bg-transparent border-none z-10">
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
 
                     {!isSignUp && (
                       <div className="text-right px-1">
-                        <button type="button" onClick={() => { setError(null); setIsForgotPassword(true); }} className="text-xs font-black text-sky-600 hover:text-blue-700 uppercase bg-transparent border-none cursor-pointer">Forgot Password?</button>
+                        <button type="button" onClick={() => { setError(null); setEmailError(null); setIsForgotPassword(true); }} className="text-xs font-black text-sky-600 hover:text-blue-700 uppercase bg-transparent border-none cursor-pointer">{t('forgotPasswordLink', 'Forgot Password?')}</button>
                       </div>
                     )}
 
                     {isSignUp && (
-                      <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600" />
+                      <div className="relative group rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all overflow-hidden">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sky-500 group-focus-within:text-blue-600 pointer-events-none z-10" />
                         <input 
                           type={showPassword ? 'text' : 'password'} 
-                          placeholder="Confirm New Password" 
+                          placeholder={t('confirmNewPassword', 'Confirm New Password')} 
                           value={confirmPassword} 
                           onChange={(e) => setConfirmPassword(e.target.value)} 
-                          className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
-                          required 
+                          className="w-full pl-12 pr-12 py-3.5 bg-transparent focus:outline-none border-none outline-none ring-0 focus:ring-0 font-bold text-slate-900 text-sm sm:text-base placeholder:text-slate-400 [::-ms-reveal]:hidden [::-ms-clear]:hidden" 
                         />
                       </div>
                     )}
@@ -287,12 +337,12 @@ export default function AccountAuth({
                     {countdown > 0 
                       ? `Please wait (${countdown}s)` 
                       : loading 
-                      ? 'Processing...' 
+                      ? t('processing', 'Processing...') 
                       : isForgotPassword 
-                      ? 'Send Reset Link' 
+                      ? t('sendResetLink', 'Send Reset Link') 
                       : isSignUp 
-                      ? 'Sign Up' 
-                      : 'Sign In'}
+                      ? t('signUp', 'Sign Up') 
+                      : t('signIn', 'Sign In')}
                   </span>
                 </motion.button>
               </form>
@@ -301,11 +351,11 @@ export default function AccountAuth({
               <div className="mt-5 mb-1 text-center">
                 <p className="text-slate-600 font-bold text-xs sm:text-sm">
                   {isForgotPassword ? (
-                    <>Remember your password?<button type="button" onClick={() => setIsForgotPassword(false)} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">Back to Sign In</button></>
+                    <>{t('rememberPassword', 'Remember your password?')}<button type="button" onClick={() => { setIsForgotPassword(false); setEmailError(null); }} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">{t('backToSignIn', 'Back to Sign In')}</button></>
                   ) : isSignUp ? (
-                    <>Already have an account?<button type="button" onClick={() => setIsSignUp(false)} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">Sign In</button></>
+                    <>{t('alreadyHaveAccount', 'Already have an account?')}<button type="button" onClick={() => { setIsSignUp(false); setEmailError(null); }} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">{t('signIn', 'Sign In')}</button></>
                   ) : (
-                    <>New User?<button type="button" onClick={() => setIsSignUp(true)} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">Create Account</button></>
+                    <>{t('newUser', 'New User?')}<button type="button" onClick={() => { setIsSignUp(true); setEmailError(null); }} className="ml-2 font-black text-blue-600 uppercase text-xs cursor-pointer bg-transparent border-none">{t('createAccount', 'Create Account')}</button></>
                   )}
                 </p>
               </div>

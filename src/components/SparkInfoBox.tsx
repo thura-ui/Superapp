@@ -40,8 +40,8 @@ export default function SparkInfoBox() {
             </p>
             <p className="text-slate-600 font-medium text-[11px] sm:text-xs leading-relaxed">
               {isMyanmar 
-                ? '၄,၀၀၀ ကျပ်ဖိုး ဝယ်ယူတိုင်း ၁ Spark ရရှိမည်ဖြစ်ပါသည်။' 
-                : 'Every 4,000 MMK spent earns 1 Spark.'}
+                ? '၄,၅၀၀ ကျပ်ဖိုး ဝယ်ယူတိုင်း ၁ Spark ရရှိမည်ဖြစ်ပါသည်။' 
+                : 'Every 4,500 MMK spent earns 1 Spark.'}
             </p>
           </div>
         </div>
