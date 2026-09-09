@@ -29,7 +29,7 @@ interface Region {
   country_count: number;
   secondary_cover_image?: string;
   flag_image?: string;
-  startingPrice: number; // 🔴 Price Interface ထည့်သွင်းခြင်း
+  startingPrice: number;
 }
 
 interface ProductWithVariation {
@@ -260,20 +260,11 @@ const mapProductsToRegions = (products: ProductItem[]): Region[] => {
     country_count: extractCountryCountFromDescription(product.description),
     secondary_cover_image: product.secondary_cover_image,
     flag_image: product.flag_image,
-    startingPrice: resolveStartingPrice(product), // 🔴 Regional / Global အတွက် စျေးနှုန်းတွက်ထုတ်ခြင်း
+    startingPrice: resolveStartingPrice(product),
   }));
 
-  const popularRegionSlugs = ['sg-my-th-3', 'sea-5', 'europe-33', 'asia-11'];
-
-  mapped.sort((a, b) => {
-    const indexA = popularRegionSlugs.indexOf(a.id);
-    const indexB = popularRegionSlugs.indexOf(b.id);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-    return 0;
-  });
+  // Regional/Global Data များကိုလည်း A-Z စီရန်
+  mapped.sort((a, b) => a.name.localeCompare(b.name));
 
   return mapped;
 };
@@ -436,6 +427,10 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
 
         if (activeTab === 'country') {
           const apiCountries = mapCountryProducts(response.items);
+          
+          // 🟢 1. API Data များကို Alphabetical (A မှ Z) စီပေးခြင်း 🟢
+          apiCountries.sort((a, b) => a.name.localeCompare(b.name));
+
           const existingNames = new Set(apiCountries.map(c => c.name.toLowerCase()));
 
           const isAllSelected = effectivePerPage >= 220;
@@ -457,8 +452,12 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
                 startingPrice: 0,
                 isComingSoon: true,
               }));
+
+            // 🟢 2. Fallback / Coming Soon များကိုလည်း A-Z စီပေးခြင်း 🟢
+            filteredComingSoon.sort((a, b) => a.name.localeCompare(b.name));
           }
 
+          // 🟢 3. API Data (A-Z) များကို အရှေ့တွင်ထားပြီး Coming Soon Data များကို နောက်ဆုံးမှ ကပ်ပေးခြင်း 🟢
           setAllCountries([...apiCountries, ...filteredComingSoon]);
           setCountryMeta(response.meta);
         }
@@ -476,10 +475,7 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
             (item) => item.name.toLowerCase().includes('global')
           );
 
-          const mappedGlobal = mapProductsToRegions(pureGlobalProducts).sort((a, b) => {
-            return a.country_count - b.country_count;
-          });
-
+          const mappedGlobal = mapProductsToRegions(pureGlobalProducts);
           setGlobalPackages(mappedGlobal);
           setGlobalMeta(response.meta);
         }
@@ -678,7 +674,6 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
           </>
         )}
 
-        {/* 🌟 REGIONAL TAB (Starting from MMK price ကို ထည့်သွင်းပေးထားပါသည်) */}
         {!loading && activeTab === 'regional' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -717,7 +712,6 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
                             {region.name}
                           </h5>
                           
-                          {/* 🔴 Starting Price ဖော်ပြခြင်း 🔴 */}
                           {region.startingPrice > 0 ? (
                             <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap m-0">
                               {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px]">MMK {region.startingPrice.toLocaleString('en-US')}</span>
@@ -737,7 +731,6 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
           </>
         )}
 
-        {/* 🌟 GLOBAL TAB (Starting from MMK price ကို ထည့်သွင်းပေးထားပါသည်) */}
         {!loading && activeTab === 'global' && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -776,7 +769,6 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
                             {pkg.name}
                           </h5>
                           
-                          {/* 🔴 Starting Price ဖော်ပြခြင်း 🔴 */}
                           {pkg.startingPrice > 0 ? (
                             <p className="text-[9px] sm:text-[11px] font-semibold text-slate-800 font-['Poppins'] whitespace-nowrap m-0">
                               {t('startingFrom')} <span className="text-slate-900 font-semibold text-[10px] sm:text-[12px]">MMK {pkg.startingPrice.toLocaleString('en-US')}</span>
