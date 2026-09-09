@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePreventDevTools } from './hooks/usePreventDevTools'; // 🔴 Prevent DevTools Hook Import
+import { usePreventDevTools } from './hooks/usePreventDevTools';
 import LoadingPage from './components/LoadingPage';
 import TopNavigation from './components/TopNavigation';
 import BottomNavigation from './components/BottomNavigation';
@@ -38,7 +38,6 @@ const SUPPORT_CHAT_POSITION_KEY = 'simless-support-chat-position';
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 function App() {
-  // 🔴 DevTools & Right-Click တားဆီးကာကွယ်မှု စနစ်အား အသက်သွင်းခြင်း
   usePreventDevTools();
 
   const { i18n } = useTranslation();
@@ -91,7 +90,7 @@ function App() {
 
     const safetyTimer = setTimeout(() => {
       if (isMounted) setIsLoading(false);
-    }, 8000);
+    }, 5000);
 
     fetchPopularProducts({ type: 'country', perPage: 12 })
       .finally(() => {
@@ -335,109 +334,9 @@ function App() {
     }
   };
 
+  // 🌟 ပထမဆုံး App စဖွင့်ချိန် မူလ Initial Loading မပြီးမချင်း Splash Screen အဖြစ်သာ LoadingPage ပေါ်မည်
   if (isLoading) {
     return <LoadingPage />;
-  }
-
-  if (currentScreen === 'cart') {
-    return (
-      <div key={`cart-${langKey}`}>
-        <CartPage
-          onBack={goHome}
-          onGoProduct={goProduct}
-          onGoHome={goHome}
-          autoOpenCheckout={autoOpenCheckout}
-          onAutoCheckoutHandled={() => setAutoOpenCheckout(false)}
-        />
-        <div className="md:hidden">
-          <BottomNavigation
-            activeTab="home"
-            isLoggedIn={isLoggedIn}
-            onHomeClick={goHome}
-            onPlanClick={goProduct}
-            onDataClick={goToMyData}
-            onHelpClick={goHelpCenter}
-            onAccountClick={goToAccountOrAuth}
-          />
-        </div>
-        {supportChatLauncher}
-        <CustomAlertHost />
-      </div>
-    );
-  }
-
-  if (currentScreen === 'plan-details' && selectedCountry) {
-    return (
-      <div key={`plan-${langKey}`} className="min-h-screen flex flex-col justify-between bg-white text-slate-900 overflow-x-hidden pt-[75px] sm:pt-[85px] pb-20 md:pb-0 relative font-['Poppins']">
-        
-        <TopNavigation
-          activeTab="plan"
-          isLoggedIn={isLoggedIn}
-          onHomeClick={goHome}
-          onProductClick={goProduct}
-          onInstallClick={() => setCurrentScreen('esim-installation-guide')}
-          onDataClick={goToMyData}
-          onPartnerClick={goPartner}
-          onHelpClick={goHelpCenter}
-          onAccountClick={goToAccountOrAuth}
-          onHistoryClick={goHistory}
-          onChatClick={() => setShowSupportChat(true)}
-        />
-
-        <main className="flex-1 w-full relative z-10">
-          <PlanDetails
-            country={selectedCountry}
-            planFilterType={selectedPlanType}
-            isLoggedIn={isLoggedIn}
-            onRequireLogin={() => {
-              setPostAuthScreen('cart');
-              goAuth('sign-in');
-            }}
-            onProceedToCheckout={() => {
-              setAutoOpenCheckout(true);
-              setCurrentScreen('cart');
-            }}
-            onBack={handleBackFromPlanDetails}
-            onHome={goHome}
-            onGoToCart={goCart}
-          />
-        </main>
-
-        <div className="md:hidden">
-          <BottomNavigation
-            activeTab="plan"
-            isLoggedIn={isLoggedIn}
-            onHomeClick={goHome}
-            onPlanClick={goProduct}
-            onDataClick={goToMyData}
-            onHelpClick={goHelpCenter}
-            onAccountClick={goToAccountOrAuth}
-          />
-        </div>
-
-        <div className="hidden md:block">
-          <Footer
-            activeScreen={currentScreen} 
-            onHomeClick={goHome}
-            onHelpCenterClick={goHelpCenter}
-            onFaqClick={() => openFaq(undefined, 'help-center')}
-            onTravelEsimClick={() => setCurrentScreen('esim-installation-guide')}
-            onApnSettingsClick={() => setCurrentScreen('apn-settings')}
-            onEsimCheckClick={goEsimCheck}
-            onWhatIsEsimClick={scrollToWhatIsEsim}
-            onHowItWorksClick={scrollToHowItWorks}
-            onPrivacyPolicyClick={goPrivacyPolicy}
-            onTermsClick={goTerms}
-            onCountryEsimsClick={goCountryEsims}
-            onRegionalEsimsClick={goRegionalEsims}
-            onGlobalEsimsClick={goGlobalEsims}
-          />
-        </div>
-
-        {supportChatLauncher}
-        <CustomAlertHost />
-      </div>
-    );
   }
 
   const navTab =
@@ -462,19 +361,22 @@ function App() {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         
-        <TopNavigation
-          activeTab={navTab}
-          isLoggedIn={isLoggedIn}
-          onHomeClick={goHome}
-          onProductClick={goProduct}
-          onInstallClick={() => setCurrentScreen('esim-installation-guide')}
-          onDataClick={goToMyData}
-          onPartnerClick={goPartner}
-          onHelpClick={goHelpCenter}
-          onAccountClick={goToAccountOrAuth}
-          onHistoryClick={goHistory}
-          onChatClick={() => setShowSupportChat(true)}
-        />
+        {/* Navigation Bar */}
+        {currentScreen !== 'cart' && (
+          <TopNavigation
+            activeTab={navTab}
+            isLoggedIn={isLoggedIn}
+            onHomeClick={goHome}
+            onProductClick={goProduct}
+            onInstallClick={() => setCurrentScreen('esim-installation-guide')}
+            onDataClick={goToMyData}
+            onPartnerClick={goPartner}
+            onHelpClick={goHelpCenter}
+            onAccountClick={goToAccountOrAuth}
+            onHistoryClick={goHistory}
+            onChatClick={() => setShowSupportChat(true)}
+          />
+        )}
 
         <main className="flex-1 w-full relative z-0">
           {currentScreen === 'home' && (
@@ -485,6 +387,35 @@ function App() {
                 goProduct();
               }}
               onSelectCountry={handleSelectCountry}
+            />
+          )}
+
+          {currentScreen === 'cart' && (
+            <CartPage
+              onBack={goHome}
+              onGoProduct={goProduct}
+              onGoHome={goHome}
+              autoOpenCheckout={autoOpenCheckout}
+              onAutoCheckoutHandled={() => setAutoOpenCheckout(false)}
+            />
+          )}
+
+          {currentScreen === 'plan-details' && selectedCountry && (
+            <PlanDetails
+              country={selectedCountry}
+              planFilterType={selectedPlanType}
+              isLoggedIn={isLoggedIn}
+              onRequireLogin={() => {
+                setPostAuthScreen('cart');
+                goAuth('sign-in');
+              }}
+              onProceedToCheckout={() => {
+                setAutoOpenCheckout(true);
+                setCurrentScreen('cart');
+              }}
+              onBack={handleBackFromPlanDetails}
+              onHome={goHome}
+              onGoToCart={goCart}
             />
           )}
 
@@ -588,7 +519,7 @@ function App() {
           )}
 
           {currentScreen === 'my-data' && (
-            <MyData onClose={goHome} onHome={goHome} onOrder={goToMyOrders} onHelp={goHelpCenter} />
+            <MyData onClose={goHome} onHome={goHome} />
           )}
 
           {currentScreen === 'my-orders' && (
@@ -598,6 +529,7 @@ function App() {
           {currentScreen === 'partner' && <PartnerPage />}
         </main>
 
+        {/* Bottom Navigation */}
         <div className="md:hidden">
           <BottomNavigation
             activeTab={navTab as 'home' | 'plan' | 'data' | 'account' | 'help'}
@@ -610,6 +542,7 @@ function App() {
           />
         </div>
 
+        {/* Footer */}
         <div className="hidden md:block">
           <Footer
             activeScreen={currentScreen} 

@@ -1,10 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, Loader2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface ChatbotProps {
   onClose: () => void;
@@ -112,12 +107,20 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
     setIsTyping(true);
 
     try {
-      // Calling Supabase Edge Function named 'chat'
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userQuery }
+      // 🟢 vite.config.ts ရှိ Proxy ကို အသုံးပြု၍ တိုတိုတုတ်တုတ် /api/chat သို့ ခေါ်ယူခြင်း 🟢
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: userQuery })
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch response from Node.js server");
+      }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -149,7 +152,6 @@ export default function Chatbot({ onClose, initialQuestion = null, initialAnswer
   };
 
   return (
-    /* 🔴 mobile-typography-fix class ကို ထည့်သွင်း၍ index.css ရှိ mobile CSS နှင့် ချိတ်ဆက်ပေးထားပါသည် 🔴 */
     <div className="mobile-typography-fix fixed inset-x-0 bottom-0 sm:inset-auto sm:bottom-5 sm:right-5 z-50 w-full sm:w-[380px] h-[85vh] sm:h-[550px] sm:max-h-[85vh] bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col border border-blue-100 font-['Poppins'] animate-slide-up overflow-hidden">
       
       {/* Header */}

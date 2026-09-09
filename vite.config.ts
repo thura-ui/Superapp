@@ -4,6 +4,16 @@ import obfuscator from 'rollup-plugin-obfuscator';
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      // 🟢 Node.js Backend Server အတွက် Proxy ချိတ်ဆက်ခြင်း 🟢
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   build: {
     sourcemap: false,
     rollupOptions: {
