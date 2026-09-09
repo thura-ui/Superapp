@@ -343,7 +343,7 @@ export default function EsimCheck({ onBack, onYes }: EsimCheckProps) {
                 </p>
 
                 <p className="text-[11px] font-semibold text-slate-400 text-center">
-                  * Please check "EID", not IMEI, IMEI2, Or MEID.
+                  * Please check "EID",.
                 </p>
               </div>
 

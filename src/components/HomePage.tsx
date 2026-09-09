@@ -431,10 +431,11 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
     <div className="mobile-typography-fix space-y-0 font-['Poppins'] text-slate-900">
       <HomeBannerCarousel onExplorePlans={() => onExplorePlans()} onSelectCountry={onSelectCountry} />
 
-      {/* Trending eSIM plan Section */}
-      <section className="pt-2 sm:pt-16 pb-8 transform-gpu relative z-10">
+    {/* 🟢 Trending eSIM Plans & What is eSIM Combined Section 🟢 */}
+      <section className="pt-2 sm:pt-16 pb-6 sm:pb-10 transform-gpu relative z-10 overflow-hidden">
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
+          {/* Section Title */}
           <motion.h3 
             initial={{ opacity: 0, y: -15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -446,6 +447,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             {t('trendingPlans')}
           </motion.h3>
           
+          {/* Filter Tabs */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -477,6 +479,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
             </div>
           ) : (
             <>
+              {/* Product Cards Grid */}
               <div className={`grid grid-cols-1 ${popularFilter === 'region' ? 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5'} mx-1 sm:mx-0`}>
                 {popularPlans.slice(0, 12).map((plan, index) => {
                   const isRegion = popularFilter === 'region' || plan.type === 'regional' || plan.type === 'global';
@@ -575,7 +578,6 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
                       className="group flex flex-row items-center bg-white border border-solid border-blue-500 rounded-[20px] p-3.5 sm:p-4 transition-all duration-300 hover:scale-[1.02] hover:border-blue-600 shadow-[0_8px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.2)] cursor-pointer transform-gpu"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        
                         <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-solid border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                           {plan.flagImage ? (
                             <img src={plan.flagImage} alt={plan.name} className="w-full h-full object-cover rounded-full" />
@@ -595,20 +597,20 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
                           
                           <p className="text-[9px] sm:text-[10px] text-slate-600 font-semibold tracking-wide font-['Poppins'] m-0">{t('tapToViewPlanDetails')}</p>
                         </div>
-
                       </div>
                     </motion.div>
                   );
                 })}
               </div>
 
+              {/* 🟢 1. See All Button (ကတ်များ၏ အောက်တွင် ထားရှိပါသည်) 🟢 */}
               {popularPlans.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   viewport={{ once: false, amount: 0.2 }}
-                  className="flex justify-center mt-10"
+                  className="flex justify-center mt-6 sm:mt-10 mb-6 sm:mb-8"
                 >
                   <button
                     onClick={() => onExplorePlans(popularFilter)}
@@ -620,25 +622,22 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
               )}
 
               {popularPlans.length === 0 && (
-                <div className="text-center text-slate-900 font-semibold mt-8 font-['Poppins']">
+                <div className="text-center text-slate-900 font-semibold mt-8 mb-6 font-['Poppins']">
                   {t('noPopularPlans', { filter: popularFilter })}
                 </div>
               )}
             </>
           )}
-        </div>
-      </section>
 
-      {/* What is eSIM Section */}
-      <section id="what-is-esim-section" className="py-4 sm:py-10 w-full relative z-10 transform-gpu overflow-hidden">
-        <div className="w-full max-w-6xl mx-auto px-1 sm:px-6 lg:px-8">
+          {/* 🟢 2. What is eSIM Banner (See All Button ၏ အောက်ဘက်သို့ ရွှေ့ထားပါသည်) 🟢 */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             viewport={{ once: false, amount: 0.2 }}
-            className="w-full relative overflow-hidden"
+            className="w-full relative overflow-hidden mt-2 sm:mt-4"
           >
+            {/* Desktop View */}
             <div className="hidden md:flex w-full justify-center">
               <img 
                 src={i18n.language === 'my' ? "/whatiseSIM-web-burmese.jpg" : "/whatiseSIM-web-english.jpg"} 
@@ -647,14 +646,16 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
               />
             </div>
 
-            <div className="flex md:hidden w-full justify-center px-0 py-1 overflow-hidden">
+            {/* Mobile View */}
+            <div className="flex md:hidden w-full justify-center px-0 py-0 overflow-hidden">
               <img 
                 src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng1.png"} 
                 alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
-                className="w-full h-auto object-contain rounded-xl shadow-xs scale-105 transition-transform duration-300"
+                className="w-full h-auto object-contain rounded-xl block"
               />
             </div>
           </motion.div>
+
         </div>
       </section>
 
