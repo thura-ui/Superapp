@@ -31,7 +31,7 @@ export default function PaymentStatusPoller({
   onSuccess,
   onTimeout,
   onCancel,
-  timeoutMs = 3 * 60 * 1000, // 3 minutes
+  timeoutMs = 2 * 60 * 1000, // 2 minutes
   onStatusChange,
 }: PaymentStatusPollerProps) {
   const [isPolling, setIsPolling] = useState(true);

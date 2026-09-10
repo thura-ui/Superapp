@@ -79,7 +79,7 @@ export default function CustomAlertHost() {
           { text: 'OK', className: 'alert-btn-primary', callback: onConfirm },
         ]);
       case 'timeout':
-        return withDefaults('Payment Timeout', 'Payment timeout after 3 minutes. Order cancelled and returning to Home page.', [
+        return withDefaults('Payment Timeout', 'Payment timeout after 2 minutes. Order cancelled and returning to Home page.', [
           { text: 'OK', className: 'alert-btn-primary', callback: onConfirm },
         ]);
       case 'registration-success':

@@ -334,7 +334,6 @@ function App() {
     }
   };
 
-  // 🌟 ပထမဆုံး App စဖွင့်ချိန် မူလ Initial Loading မပြီးမချင်း Splash Screen အဖြစ်သာ LoadingPage ပေါ်မည်
   if (isLoading) {
     return <LoadingPage />;
   }
@@ -395,8 +394,6 @@ function App() {
               onBack={goHome}
               onGoProduct={goProduct}
               onGoHome={goHome}
-              autoOpenCheckout={autoOpenCheckout}
-              onAutoCheckoutHandled={() => setAutoOpenCheckout(false)}
             />
           )}
 
@@ -542,25 +539,27 @@ function App() {
           />
         </div>
 
-        {/* Footer */}
-        <div className="hidden md:block">
-          <Footer
-            activeScreen={currentScreen} 
-            onHomeClick={goHome}
-            onHelpCenterClick={goHelpCenter}
-            onFaqClick={() => openFaq(undefined, 'help-center')}
-            onTravelEsimClick={() => setCurrentScreen('esim-installation-guide')}
-            onApnSettingsClick={() => setCurrentScreen('apn-settings')}
-            onEsimCheckClick={goEsimCheck}
-            onWhatIsEsimClick={scrollToWhatIsEsim}
-            onHowItWorksClick={scrollToHowItWorks}
-            onPrivacyPolicyClick={goPrivacyPolicy}
-            onTermsClick={goTerms}
-            onCountryEsimsClick={goCountryEsims}
-            onRegionalEsimsClick={goRegionalEsims}
-            onGlobalEsimsClick={goGlobalEsims}
-          />
-        </div>
+        {/* 🌟 Footer - Confirm Payment (cart) စာမျက်နှာတွင် လုံးဝ ဖျောက်ထားပါမည် 🌟 */}
+        {currentScreen !== 'cart' && (
+          <div className="hidden md:block">
+            <Footer
+              activeScreen={currentScreen} 
+              onHomeClick={goHome}
+              onHelpCenterClick={goHelpCenter}
+              onFaqClick={() => openFaq(undefined, 'help-center')}
+              onTravelEsimClick={() => setCurrentScreen('esim-installation-guide')}
+              onApnSettingsClick={() => setCurrentScreen('apn-settings')}
+              onEsimCheckClick={goEsimCheck}
+              onWhatIsEsimClick={scrollToWhatIsEsim}
+              onHowItWorksClick={scrollToHowItWorks}
+              onPrivacyPolicyClick={goPrivacyPolicy}
+              onTermsClick={goTerms}
+              onCountryEsimsClick={goCountryEsims}
+              onRegionalEsimsClick={goRegionalEsims}
+              onGlobalEsimsClick={goGlobalEsims}
+            />
+          </div>
+        )}
       </div>
       {supportChatLauncher}
       <CustomAlertHost />
