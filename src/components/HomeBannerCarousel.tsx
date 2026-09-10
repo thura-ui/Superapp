@@ -30,7 +30,6 @@ const mapProductToCountry = (product: ProductItem): Country => {
     id: product.slug,
     name: product.name,
     code: regionCode,
-    // 🌟 API မှ ပါလာသော flag_image, country_flag_url, flag_url များကို သေချာစွာ ချိတ်ဆက်ပေးထားပါသည်
     flagUrl: product.flag_image || product.country_flag_url || product.flag_url,
     type: mappedType,
     popular: Boolean(product.is_popular || product.popular || product.featured),
@@ -227,7 +226,6 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
                 onClick={() => handleSelectCountry(country)}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-100 transition-colors border-0 border-b border-solid border-slate-100 last:border-b-0 cursor-pointer text-slate-800"
               >
-                {/* 🌟 နိုင်ငံအလံ ပုံရိပ်အား API Image ဖြင့် တိုက်ရိုက်ပြသခြင်း */}
                 {country.flagUrl ? (
                   <img 
                     src={country.flagUrl} 

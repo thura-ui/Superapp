@@ -338,9 +338,10 @@ function App() {
     return <LoadingPage />;
   }
 
+  // 🌟 navTab တွက်ချက်မှုတွင် plan-details ပါဝင်အောင် ပြင်ထားပါသည် 🌟
   const navTab =
     currentScreen === 'home' ? 'home' :
-    currentScreen === 'country-selection' ? 'plan' :
+    (currentScreen === 'country-selection' || currentScreen === 'plan-details') ? 'plan' :
     currentScreen === 'esim-installation-guide' ? 'install' :
     currentScreen === 'my-data' ? 'data' :
     currentScreen === 'my-orders' ? 'history' :
@@ -539,7 +540,7 @@ function App() {
           />
         </div>
 
-        {/* 🌟 Footer - Confirm Payment (cart) စာမျက်နှာတွင် လုံးဝ ဖျောက်ထားပါမည် 🌟 */}
+        {/* Footer */}
         {currentScreen !== 'cart' && (
           <div className="hidden md:block">
             <Footer

@@ -460,7 +460,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
   const availableCategoriesCount = [hasFixedPlans, hasDayPassPlans, hasUnlimitedPlans].filter(Boolean).length;
 
-  // 🔴 🌟 How to Install eSIM Accordion Component 🌟 🔴
   const InstallGuideAccordion = () => (
     <div className="w-full pt-1">
       <button
@@ -561,7 +560,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
     </div>
   );
 
-  // 🔴 🌟 How to Activate eSIM Accordion Component (New Added) 🌟 🔴
   const EsimActivateAccordion = () => (
     <div className="w-full pt-1 border-t border-blue-100 font-['Poppins']">
       <button
@@ -584,7 +582,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
       {showActivateGuide && (
         <div className="mt-2.5 p-3.5 sm:p-4 bg-white border border-blue-200 rounded-2xl space-y-3 animate-in slide-in-from-top-2 fade-in duration-200 font-['Poppins']">
           
-          {/* Device Tabs Bar (iPhone / Samsung) */}
           <div className="grid grid-cols-2 gap-1 rounded-xl bg-blue-50/60 border border-blue-200 p-1 w-full font-['Poppins']">
             <button
               type="button"
@@ -610,7 +607,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
             </button>
           </div>
 
-          {/* Activation Step Details */}
           <div className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-medium pt-1">
             {activeActivateDeviceTab === 'ios' && (
               <div className="space-y-1.5 sm:space-y-2">
@@ -643,7 +639,8 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
   );
 
   return (
-    <div className="mobile-typography-fix w-full min-h-screen bg-white selection:bg-blue-100 py-3 sm:py-6 px-3 sm:px-6 lg:px-8 pb-10 sm:pb-8 relative font-['Poppins'] text-slate-900">
+    /* 🌟 Top Navigation အောက် မဝင်သွားစေရန် pt-20 (Mobile) နှင့် pt-28 (Desktop) သို့ ပြောင်းထားပါသည် 🌟 */
+    <div className="mobile-typography-fix w-full min-h-screen bg-white selection:bg-blue-100 pt-20 sm:pt-28 pb-10 sm:pb-8 px-3 sm:px-6 lg:px-8 relative font-['Poppins'] text-slate-900">
       <div className="max-w-6xl mx-auto space-y-3 sm:space-y-6">
         
         {/* Web Split Responsive Layout */}
@@ -933,7 +930,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                   {/* Desktop Installation Guide Accordion */}
                   <InstallGuideAccordion />
 
-                  {/* Desktop Activation Guide Accordion (New Added) */}
+                  {/* Desktop Activation Guide Accordion */}
                   <EsimActivateAccordion />
                 </div>
 
@@ -949,7 +946,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
                   <InstallGuideAccordion />
 
-                  {/* Mobile Activation Guide Accordion (New Added) */}
+                  {/* Mobile Activation Guide Accordion */}
                   <EsimActivateAccordion />
                 </div>
 

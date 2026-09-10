@@ -76,6 +76,33 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
   const [isFaqLoading, setIsFaqLoading] = useState<boolean>(true);
   const [faqError, setFaqError] = useState<string | null>(null);
 
+  // 🌟 အခြား Page များမှ ပြန်လာပါက what-is-esim-section ဆီသို့ တိတိကျကျ Scroll ဆင်းပေးမည့် Effect
+  useEffect(() => {
+    const targetId = sessionStorage.getItem('scrollToTargetId');
+    if (targetId) {
+      let attempts = 0;
+      const maxAttempts = 25;
+
+      const scrollToTarget = () => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+          window.scrollTo({
+            top: elementPosition - 80,
+            behavior: 'smooth'
+          });
+          sessionStorage.removeItem('scrollToTargetId');
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(scrollToTarget, 100);
+        }
+      };
+
+      const timer = setTimeout(scrollToTarget, 200);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const resolveStartingPrice = (product: ProductItem): number => {
     if (typeof product.starting_price === 'number' && Number.isFinite(product.starting_price)) {
       return product.starting_price;
@@ -432,7 +459,7 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
       <HomeBannerCarousel onExplorePlans={() => onExplorePlans()} onSelectCountry={onSelectCountry} />
 
       {/* Trending eSIM plan Section */}
-      <section className="pt-2 sm:pt-16 pb-8 transform-gpu relative z-10">
+      <section className="pt-2 sm:pt-16 pb-4 sm:pb-8 transform-gpu relative z-10">
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <motion.h3 
@@ -603,20 +630,20 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
               </div>
 
               {popularPlans.length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  viewport={{ once: false, amount: 0.2 }}
-                  className="flex justify-center mt-10"
+              <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                viewport={{ once: false, amount: 0.2 }}
+                className="flex justify-center mt-6 sm:mt-10 mb-1 sm:mb-0"
+              >
+                <button
+                  onClick={() => onExplorePlans(popularFilter)}
+                  className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm tracking-wide rounded-xl shadow-md shadow-blue-200/50 hover:shadow-blue-300/60 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border-none cursor-pointer font-['Poppins'] whitespace-nowrap"
                 >
-                  <button
-                    onClick={() => onExplorePlans(popularFilter)}
-                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm tracking-wide rounded-xl shadow-md shadow-blue-200/50 hover:shadow-blue-300/60 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border-none cursor-pointer font-['Poppins'] whitespace-nowrap"
-                  >
-                    {popularFilter === 'country' ? t('seeAllCountries') : t('seeAllRegions')}
-                  </button>
-                </motion.div>
+                  {popularFilter === 'country' ? t('seeAllCountries') : t('seeAllRegions')}
+                </button>
+              </motion.div>
               )}
 
               {popularPlans.length === 0 && (
@@ -629,34 +656,36 @@ export default function HomePage({ onExplorePlans, onSelectCountry }: HomePagePr
         </div>
       </section>
 
-      {/* What is eSIM Section */}
-      <section id="what-is-esim-section" className="py-4 sm:py-10 w-full relative z-10 transform-gpu overflow-hidden">
-        <div className="w-full max-w-6xl mx-auto px-1 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            viewport={{ once: false, amount: 0.2 }}
-            className="w-full relative overflow-hidden"
-          >
-            <div className="hidden md:flex w-full justify-center">
-              <img 
-                src={i18n.language === 'my' ? "/whatiseSIM-web-burmese.jpg" : "/whatiseSIM-web-english.jpg"} 
-                alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
-                className="w-full h-auto object-contain rounded-2xl shadow-sm"
-              />
-            </div>
+      {/* 🌟 What is eSIM Section 🌟 */}
+        <section id="what-is-esim-section" className="pt-0 sm:pt-4 pb-4 sm:pb-10 w-full relative z-10 transform-gpu overflow-hidden">
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: false, amount: 0.2 }}
+              className="w-full relative overflow-hidden"
+            >
+              {/* Desktop View */}
+              <div className="hidden md:flex w-full justify-center">
+                <img 
+                  src={i18n.language === 'my' ? "/whatiseSIM-web-burmese.jpg" : "/whatiseSIM-web-english.jpg"} 
+                  alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
+                  className="w-full h-auto object-contain rounded-2xl shadow-sm"
+                />
+              </div>
 
-            <div className="flex md:hidden w-full justify-center px-0 py-1 overflow-hidden">
-              <img 
-                src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng1.png"} 
-                alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
-                className="w-full h-auto object-contain rounded-xl shadow-xs scale-105 transition-transform duration-300"
-              />
-            </div>
-          </motion.div>
-        </div>
-      </section>
+              {/* 🔴 Mobile View - "-mt-4" သို့မဟုတ် "-mt-6" ထည့်ပေးခြင်းဖြင့် ပုံကို အပေါ်သို့ ပိုမို ဆွဲတင်ပေးပါမည် 🔴 */}
+              <div className="flex md:hidden w-full justify-center px-0 -mt-4 sm:mt-0 overflow-hidden">
+                <img 
+                  src={i18n.language === 'my' ? "/whatis-eSIM-mobile-myan.png" : "/whatis-eSIM-mobile-eng1.png"} 
+                  alt={i18n.language === 'my' ? "eSIM ဆိုတာဘာလဲ" : "What is eSIM"} 
+                  className="w-full h-auto object-contain rounded-xl shadow-xs scale-100 transition-transform duration-300 block"
+                />
+              </div>
+            </motion.div>
+          </div>
+        </section>
 
       {/* How it works Section */}
       <section 
