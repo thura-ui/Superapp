@@ -90,7 +90,7 @@ function App() {
 
     const safetyTimer = setTimeout(() => {
       if (isMounted) setIsLoading(false);
-    }, 5000);
+    }, 60000);
 
     fetchPopularProducts({ type: 'country', perPage: 12 })
       .finally(() => {

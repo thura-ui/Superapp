@@ -286,6 +286,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
                 className="w-full h-auto min-h-[180px] sm:min-h-[440px] lg:min-h-[520px] block object-cover object-center"
               />
               
+              {/* 🌟 Slide 2 ပေါ်တွင် Search Bar သီးသန့် ပေါ်လိုပါက 🌟 */}
               {banner.id === 2 && (
                 <div className="hidden sm:flex absolute inset-0 z-10 pointer-events-none">
                   <div className="flex flex-col justify-center items-start pl-16 md:pl-20 lg:pl-24 w-1/2">
@@ -298,6 +299,11 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
             </div>
           ))}
         </div>
+
+        {/* 🌟 Web View (Desktop) တွင် Banner Carousel ၏ အပေါ်၌ Search Bar ကို အမြဲတမ်း ပေါ်နေစေခြင်း 🌟 */}
+        <div className="hidden sm:block absolute left-[160px] top-1/2 sm:top-[66%] z-30 w-80 md:w-96 lg:w-[420px]">
+  {renderSearchBar()}
+</div>
 
         {slideCount > 1 && (
           <>
@@ -344,6 +350,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
         )}
       </div>
 
+      {/* Mobile View အတွက် Search Bar */}
       {isMobile && (
         <div className="block sm:hidden mt-4 px-4 relative z-40">
           {renderSearchBar()}
