@@ -159,7 +159,7 @@ const resources = {
       primaryNode: ' (To Install)',
       connectedHardwareId: 'Connected Hardware ID',
       iccidLabel: 'ICCID',
-      timeDuration: 'Time Duration',
+      timeDuration: 'Validity',
       daysAllotted: 'Days Allotted',
       terminationExpiry: 'Termination Expiry',
       apnTarget: 'APN Target',

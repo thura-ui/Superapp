@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Calendar, HardDrive, RefreshCw, Cpu, Wifi, ArrowLeft, ArrowRight, Layers, Search, Lightbulb, SearchCode } from 'lucide-react';
+import { Globe, Calendar, HardDrive, RefreshCw, Cpu, Wifi, ArrowLeft, ArrowRight, Layers, Search, Lightbulb, SearchCode, Infinity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface MyDataProps {
@@ -13,6 +13,9 @@ interface EsimStatusData {
   remainingData: number;
   usedData: number;
   totalData: number;
+  isUnlimited: boolean;
+  isDayPass: boolean; // 💡 Daypass အတွက် Flag
+  dailyLimitStr: string; // 💡 Daypass ၏ Daily Limit (ဥပမာ "1GB/Day")
   days: number;
   expiry: string;
   coverage: string;
@@ -31,6 +34,7 @@ interface UserOrderCard {
   usedData: number;
   expiry: string;
   status: string;
+  variationLabel: string;
 }
 
 // 🔴 Anti-Cache Helper Functions
@@ -61,7 +65,6 @@ export default function MyData({ onHome }: MyDataProps) {
   const [isLoggedInUser, setIsLoggedInUser] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
-  // 🔴 Window Screen Width ကို ခြေရာခံမည့် State
   const [screenWidth, setScreenWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1024
   );
@@ -72,10 +75,8 @@ export default function MyData({ onHome }: MyDataProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 🔴 Statuses List
   const statuses = ['statusNotUsed', 'statusInUse', 'statusUsed', 'statusExpired'];
   
-  // 🔴 Dynamic Radius Logic
   const calculateDynamicRadius = () => {
     let baseRadius = screenWidth < 640 ? 88 : 94;
 
@@ -96,7 +97,10 @@ export default function MyData({ onHome }: MyDataProps) {
 
   const radius = calculateDynamicRadius();
   const circumference = 2 * Math.PI * radius;
-  const remainingPercent = fetchedData ? (fetchedData.remainingData / fetchedData.totalData) * 100 : 0;
+
+  const remainingPercent = fetchedData 
+    ? (fetchedData.isUnlimited ? 100 : (fetchedData.totalData > 0 ? (fetchedData.remainingData / fetchedData.totalData) * 100 : 0))
+    : 0;
   const strokeDashoffset = circumference - (remainingPercent / 100) * circumference;
 
   const calculateOneMonthExpiry = (placedAtStr?: string): string => {
@@ -117,11 +121,20 @@ export default function MyData({ onHome }: MyDataProps) {
     }
   };
 
-  const checkStrictEsimStatus = (endTimeStr?: string, remainingGb: number = 0, defaultStatus: string = 'In Use', placedAtStr?: string): string => {
+  const checkStrictEsimStatus = (
+    endTimeStr?: string, 
+    remainingGb: number = 0, 
+    defaultStatus: string = '', 
+    placedAtStr?: string
+  ): string => {
     const now = new Date();
+    const normalizedStatus = (defaultStatus || '').trim().toLowerCase();
 
-    if (remainingGb <= 0) {
-      return 'statusUsed';
+    if (normalizedStatus === 'expired') {
+      return 'statusExpired';
+    }
+    if (normalizedStatus === 'cancelled') {
+      return 'statusCancelled';
     }
 
     if (endTimeStr) {
@@ -141,11 +154,19 @@ export default function MyData({ onHome }: MyDataProps) {
       }
     }
 
-    if (defaultStatus === 'Cancelled') return 'statusCancelled';
-    if (defaultStatus === 'In Use') return 'statusInUse';
-    if (defaultStatus === 'Not Used') return 'statusNotUsed';
-    if (defaultStatus === 'Expired') return 'statusExpired';
-    if (defaultStatus === 'Used') return 'statusUsed';
+    if (normalizedStatus === 'not used' || normalizedStatus === 'notused') {
+      return 'statusNotUsed';
+    }
+    if (normalizedStatus === 'in use' || normalizedStatus === 'inuse') {
+      return 'statusInUse';
+    }
+    if (normalizedStatus === 'used') {
+      return 'statusUsed';
+    }
+
+    if (remainingGb <= 0 && normalizedStatus !== 'not used') {
+      return 'statusUsed';
+    }
 
     return 'statusInUse';
   };
@@ -181,7 +202,7 @@ export default function MyData({ onHome }: MyDataProps) {
     }
   };
 
-  const parseEsimStatusData = (statusNode: any, placedAt?: string) => {
+  const parseEsimStatusData = (statusNode: any, placedAt?: string, fallbackDays?: string, variationLabelStr: string = '') => {
     if (!statusNode || !statusNode.success) return null;
 
     const plan = statusNode.data.plan;
@@ -191,8 +212,8 @@ export default function MyData({ onHome }: MyDataProps) {
       ? countryList.map((c: any) => c.name).join(', ')
       : (plan.operator || "Global Zone");
 
-    const remainingGb = Number(usage.remaining_gb) || 0;
-    const rawStatusLabel = plan.status_label || "In Use";
+    const remainingGb = Number(usage?.remaining_gb) || 0;
+    const rawStatusLabel = plan.status_label || "Not Used";
 
     const finalStatusKey = checkStrictEsimStatus(plan.end_time, remainingGb, rawStatusLabel, placedAt);
 
@@ -200,17 +221,55 @@ export default function MyData({ onHome }: MyDataProps) {
       ? plan.end_time.split(' ')[0] 
       : calculateOneMonthExpiry(placedAt);
 
+    const displayDays = Number(plan.total_days) || (fallbackDays ? parseInt(fallbackDays) : 30);
+
+    const label = variationLabelStr.toLowerCase();
+    const sku = (plan.sku_name || '').toLowerCase();
+    const planTypeLabel = (plan.plan_type_label || '').toLowerCase();
+
+    // 💡 Day Pass ဟုတ်မဟုတ် စစ်ဆေးခြင်း ("plan_type_label": "Daily Data" ပါ စစ်ဆေးပါသည်)
+    const isDayPass = (planTypeLabel === "daily data" || plan.plan_type_code === "1") && (
+      label.includes('day pass') || 
+      label.includes('daypass') || 
+      sku.includes('day pass') || 
+      sku.includes('daypass')
+    );
+
+    // 💡 Unlimited Plan စစ်ဆေးခြင်း
+    const isUnlimitedPlan = !isDayPass && (
+      label.includes('unlimited') || 
+      sku.includes('unlimited') ||
+      ((planTypeLabel === "daily data" || plan.plan_type_code === "1") && Number(plan.high_flow_size_gb) <= 0)
+    );
+
+    // 💡 Daypass အတွက် GB/Day စာသား ထုတ်ယူခြင်း (ဥပမာ 1GB/Day)
+    let dailyLimitStr = "1GB/Day";
+    if (isDayPass) {
+      const match = variationLabelStr.match(/(\d+GB\/Day|\d+MB\/Day)/i) || (plan.sku_name || '').match(/(\d+GB\/day|\d+MB\/day)/i);
+      if (match) {
+        dailyLimitStr = match[0];
+      }
+    }
+
+    const rawHighFlowGb = Number(plan.high_flow_size_gb) || 0;
+    const totalGb = isUnlimitedPlan 
+      ? -1 
+      : (rawHighFlowGb > 0 ? rawHighFlowGb : (remainingGb + (Number(usage?.total_used_gb) || 0)));
+
     return {
       title: plan.sku_name?.trim() || "eSIM Data Plan",
       status: finalStatusKey,
       remainingData: remainingGb,
-      usedData: Number(usage.total_used_gb) || 0,
-      totalData: Number(plan.high_flow_size_gb) || 0,
-      days: Number(plan.total_days) || 30,
+      usedData: Number(usage?.total_used_gb) || 0,
+      totalData: totalGb,
+      isUnlimited: isUnlimitedPlan,
+      isDayPass: isDayPass, // 💡 Day Pass ဖြစ်ကြောင်း Flag
+      dailyLimitStr: dailyLimitStr, // 💡 Day Pass ပြသရန် စာသား
+      days: displayDays,
       expiry: computedExpiry,
       coverage: coverageNames,
-      apn: plan.apn || "cmhk",
-      operator: plan.operator || "China Mobile",
+      apn: plan.apn || "mobile.three.com.hk",
+      operator: plan.operator || "LG U+",
       dailyHistory: (statusNode.data.usage_history || []).map((h: any) => ({
         date: h.date,
         usage: `${h.usage_gb} GB`
@@ -251,35 +310,42 @@ export default function MyData({ onHome }: MyDataProps) {
             const iccid = order.iccids?.[0];
             
             if (iccid && product) {
-              const labelParts = product.product_variation_label.split('·');
+              const rawVariationLabel = product.product_variation_label || '';
+              const labelParts = rawVariationLabel.split(/·|\u00b7/);
+              
               const planType = labelParts[0]?.trim() || 'Fixed';
               const planData = labelParts[1]?.trim() || 'Data';
-              const planDays = labelParts[2]?.trim() || 'Flexible';
+              const planDays = labelParts[2]?.trim() || 'Days';
 
-              const currentStatus = resJson.status?.data?.plan?.channel_order_id === order.order_number ? resJson.status : null;
-              const remData = currentStatus ? Number(currentStatus.data.usage_summary.remaining_gb) : parseFloat(planData) || 0;
-              const usdData = currentStatus ? Number(currentStatus.data.usage_summary.total_used_gb) : 0;
+              const currentStatusNode = resJson.status?.data?.plan?.channel_order_id === order.order_number 
+                ? resJson.status 
+                : (resJson.status?.data?.order_id === order.id ? resJson.status : null);
+
+              const rawStatus = currentStatusNode?.data?.plan?.status_label || resJson.status?.data?.plan?.status_label || "In Use";
+
+              const remData = currentStatusNode ? Number(currentStatusNode.data.usage_summary.remaining_gb) : parseFloat(planData) || 0;
+              const usdData = currentStatusNode ? Number(currentStatusNode.data.usage_summary.total_used_gb) : 0;
               
               const calculatedExpDate = calculateOneMonthExpiry(order.placed_at);
-              const expDate = currentStatus?.data?.plan?.end_time 
-                ? currentStatus.data.plan.end_time.split(' ')[0] 
+              const expDate = currentStatusNode?.data?.plan?.end_time 
+                ? currentStatusNode.data.plan.end_time.split(' ')[0] 
                 : calculatedExpDate;
 
-              const rawStatus = currentStatus ? currentStatus.data.plan.status_label : (resJson.status?.data?.plan?.status_label || "In Use");
-              const endTimeStr = currentStatus?.data?.plan?.end_time;
+              const endTimeStr = currentStatusNode?.data?.plan?.end_time;
 
               const finalCardStatusKey = checkStrictEsimStatus(endTimeStr, remData, rawStatus, order.placed_at);
 
               mappedCards.push({
                 iccid: iccid,
                 country: product.product_name || 'Global',
-                plan: `${planType} (${planData})`,
+                plan: `${planType} · ${planData}`,
                 days: planDays,
                 orderNumber: order.order_number,
                 remainingData: remData,
                 usedData: usdData,
                 expiry: expDate,
-                status: finalCardStatusKey
+                status: finalCardStatusKey,
+                variationLabel: rawVariationLabel
               });
             }
           });
@@ -321,7 +387,12 @@ export default function MyData({ onHome }: MyDataProps) {
       const resJson = await response.json();
       if (resJson.success && resJson.status) {
         const selectedCardObj = userCards.find(c => c.iccid === iccid);
-        const parsed = parseEsimStatusData(resJson.status, selectedCardObj?.expiry);
+        const parsed = parseEsimStatusData(
+          resJson.status, 
+          selectedCardObj?.expiry, 
+          selectedCardObj?.days, 
+          selectedCardObj?.variationLabel || ''
+        );
         setFetchedData(parsed);
         setViewMode('detail');
       } else {
@@ -569,8 +640,8 @@ export default function MyData({ onHome }: MyDataProps) {
                       <span className="font-semibold text-slate-800 text-sm font-['Poppins']">{Math.abs(card.usedData).toFixed(2)} GB</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight block font-['Poppins']">{t('expiryDate')}</span>
-                      <span className="font-semibold text-slate-800 text-[11px] block truncate font-['Poppins']">{card.expiry}</span>
+                      <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-tight block font-['Poppins']">{t('timeDuration')}</span>
+                      <span className="font-semibold text-slate-800 text-[11px] block truncate font-['Poppins']">{card.days}</span>
                     </div>
                   </div>
 
@@ -612,25 +683,31 @@ export default function MyData({ onHome }: MyDataProps) {
               </svg>
               
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <div className="flex items-baseline justify-center leading-none">
-                  <span 
-                    className="font-black text-white tracking-tight leading-none font-['Poppins']"
-                    style={{ fontSize: 'clamp(28px, 6.5vw, 42px)' }}
-                  >
-                    {Math.abs(fetchedData.remainingData) % 1 === 0 
-                      ? Math.abs(fetchedData.remainingData) 
-                      : Math.abs(fetchedData.remainingData).toFixed(2)}
-                  </span>
-                  <span 
-                    className="text-blue-400 font-bold ml-1 leading-none" 
-                    style={{ fontSize: 'clamp(18px, 4.5vw, 26px)' }}
-                  >
-                    GB
-                  </span>
+                <div className="flex items-center justify-center leading-none">
+                  {fetchedData.isUnlimited ? (
+                    <Infinity className="w-12 h-12 sm:w-16 sm:h-16 text-white stroke-[2.5]" />
+                  ) : (
+                    <>
+                      <span 
+                        className="font-black text-white tracking-tight leading-none font-['Poppins']"
+                        style={{ fontSize: 'clamp(28px, 6.5vw, 42px)' }}
+                      >
+                        {Math.abs(fetchedData.remainingData) % 1 === 0 
+                          ? Math.abs(fetchedData.remainingData) 
+                          : Math.abs(fetchedData.remainingData).toFixed(2)}
+                      </span>
+                      <span 
+                        className="text-blue-400 font-bold ml-1 leading-none" 
+                        style={{ fontSize: 'clamp(18px, 4.5vw, 26px)' }}
+                      >
+                        GB
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <span 
-                  className="font-semibold text-slate-400 tracking-wider uppercase mt-1.5 block text-center font-['Poppins'] leading-none"
+                  className="font-semibold text-slate-400 tracking-wider uppercase mt-2 block text-center font-['Poppins'] leading-none"
                   style={{ fontSize: '10px' }}
                 >
                   {t('dataRemaining')}
@@ -649,16 +726,19 @@ export default function MyData({ onHome }: MyDataProps) {
               </div>
               <div className="text-center">
                 <p className="text-[10px] sm:text-[11px] uppercase text-slate-400 font-['Poppins']">{t('totalData')}</p>
+                {/* 💡 Total Data ပြသမှု - Unlimited / Daypass (1GB/Day) / Fixed (10 GB) */}
                 <p className="text-white font-semibold mt-0.5 font-['Poppins']">
-                  {fetchedData.remainingData < 0 || fetchedData.totalData < 0 
+                  {fetchedData.isUnlimited 
                     ? "Unlimited" 
-                    : `${fetchedData.totalData % 1 === 0 ? fetchedData.totalData : fetchedData.totalData.toFixed(2)} GB`
+                    : fetchedData.isDayPass 
+                      ? fetchedData.dailyLimitStr 
+                      : `${fetchedData.totalData % 1 === 0 ? fetchedData.totalData : fetchedData.totalData.toFixed(2)} GB`
                   }
                 </p>
               </div>
             </div>
 
-            {/* 🔴 Workflow Status Steps List (စာသား အပိုများ လုံးဝ မပါဘဲ သန့်ရှင်းစွာ ပြထားသည်) 🔴 */}
+            {/* Workflow Status Steps List */}
             <div className="w-full mt-6 sm:mt-8 bg-white/5 rounded-2xl p-4 border border-white/5 text-left font-['Poppins']">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3 font-['Poppins']">{t('workflowStatus')}</p>
               <div className="space-y-3">
@@ -707,7 +787,7 @@ export default function MyData({ onHome }: MyDataProps) {
                     {t('timeDuration')}
                   </p>
                   <p className="text-[11px] sm:text-sm font-bold text-slate-800 whitespace-nowrap overflow-hidden text-ellipsis font-['Poppins'] mt-0.5">
-                    {fetchedData.days} {t('daysAllotted')}
+                    {fetchedData.days} Days
                   </p>
                 </div>
               </div>
