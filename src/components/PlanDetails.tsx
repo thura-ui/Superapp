@@ -538,7 +538,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                 <p className="font-bold text-slate-900">Go to Settings &gt; Connections &gt; SIM manager &gt; Add eSIM</p>
                 <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
                   <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
-                  <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
                   <li>eSIM will not be <strong>activated</strong> in Myanmar. You can only install it first.</li>
                 </ol>
               </div>
@@ -550,7 +549,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
                 <ol className="list-decimal pl-4 space-y-1 sm:space-y-1.5">
                   <li>Choose <strong>Scan QR code</strong> from another device and complete installation.</li>
                   <li>eSIM will not be <strong>activated</strong> in Myanmar. You can only install it first.</li>
-                  <li>Turn on <strong>ONLY Simless travel eSIM</strong> and turn off your primary line.</li>
                 </ol>
               </div>
             )}
