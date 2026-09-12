@@ -61,7 +61,7 @@ export default function MyData({ onHome }: MyDataProps) {
   const [isLoggedInUser, setIsLoggedInUser] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
 
-  // 🔴 Window Screen Width ကို ခြေရာခံမည့် State 🔴
+  // 🔴 Window Screen Width ကို ခြေရာခံမည့် State
   const [screenWidth, setScreenWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1024
   );
@@ -72,9 +72,10 @@ export default function MyData({ onHome }: MyDataProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 🔴 Statuses List
   const statuses = ['statusNotUsed', 'statusInUse', 'statusUsed', 'statusExpired'];
   
-  // 🔴 Dynamic Radius Logic (Mobile / Web View + Text Length ပေါ် မူတည်၍ တွက်ချက်ခြင်း) 🔴
+  // 🔴 Dynamic Radius Logic
   const calculateDynamicRadius = () => {
     let baseRadius = screenWidth < 640 ? 88 : 94;
 
@@ -227,7 +228,6 @@ export default function MyData({ onHome }: MyDataProps) {
       try {
         const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
         
-        // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
         const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/customer-check-status`);
         const headers = getAntiCacheHeaders({
           'Authorization': `Bearer ${token}`
@@ -307,7 +307,6 @@ export default function MyData({ onHome }: MyDataProps) {
       const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
       const token = localStorage.getItem('authToken');
 
-      // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
       const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/customer-check-status`);
       const headers = getAntiCacheHeaders({
         'Authorization': `Bearer ${token}`
@@ -347,7 +346,6 @@ export default function MyData({ onHome }: MyDataProps) {
       const baseUrl = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
       const token = localStorage.getItem('authToken');
 
-      // 🔴 Anti-Cache URL နှင့် Headers ထည့်သွင်းခြင်း
       const fetchUrl = appendAntiCacheParam(`${baseUrl}/esim/check-status`);
       const headers = getAntiCacheHeaders(
         token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -660,18 +658,20 @@ export default function MyData({ onHome }: MyDataProps) {
               </div>
             </div>
 
+            {/* 🔴 Workflow Status Steps List (စာသား အပိုများ လုံးဝ မပါဘဲ သန့်ရှင်းစွာ ပြထားသည်) 🔴 */}
             <div className="w-full mt-6 sm:mt-8 bg-white/5 rounded-2xl p-4 border border-white/5 text-left font-['Poppins']">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3 font-['Poppins']">{t('workflowStatus')}</p>
               <div className="space-y-3">
                 {statuses.map((stKey) => {
                   const isActive = fetchedData.status === stKey;
+
                   return (
                     <div key={stKey} className="flex items-center gap-3 font-['Poppins']">
                       <div className={`w-2.5 h-2.5 rounded-full transition-all ${
                         isActive ? 'bg-blue-500 ring-4 ring-blue-500/20 scale-110' : 'bg-white/10'
                       }`} />
-                      <span className={`text-sm font-semibold ${isActive ? 'text-blue-400' : 'text-slate-400'} font-['Poppins']`}>
-                        {t(stKey)} {isActive && `• ${t('primaryNode')}`}
+                      <span className={`text-sm font-semibold ${isActive ? 'text-blue-400 font-bold' : 'text-slate-400'} font-['Poppins']`}>
+                        {t(stKey)}
                       </span>
                     </div>
                   );

@@ -253,101 +253,120 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
     </div>
   );
 
-  return (
-    <section
-      className="relative overflow-visible w-full pb-6 sm:pb-10 select-none z-30"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+ return (
+  <section
+    className="relative overflow-visible w-full pb-20 sm:pb-28 select-none z-30"
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
+  >
+    {/* 🌟 group/carousel သေချာပါဝင်ပြီး overflow-visible ဖြစ်အောင် ပြင်ထားပါသည် 🌟 */}
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="relative overflow-visible w-full bg-transparent group/carousel transition-all duration-300"
     >
-      <div 
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="relative overflow-hidden w-full bg-white group/carousel transition-all duration-300"
-      >
-        {bannerLoaded && slideCount === 0 && (
-          <div className="w-full h-36 sm:h-80 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center p-6 sm:p-10">
-            <h1 className="text-sm sm:text-xl text-white font-bold">Banner data is currently unavailable.</h1>
-          </div>
-        )}
-
-        {/* Carousel Track */}
-        <div
-          className="flex flex-row w-full"
-          style={{ 
-            transform: `translateX(-${activeIndex * 100}%)`,
-            transition: isTransitioning ? 'transform 1200ms cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
-          }}
-        >
-          {extendedBanners.map((banner, index) => (
-            <div key={`${banner.id}-${index}`} className="min-w-full w-full shrink-0 relative overflow-hidden block">
-              {/* Banner Image */}
-              <img
-                src={banner.image_url}
-                alt=""
-                className="w-full h-auto min-h-[180px] sm:min-h-[440px] lg:min-h-[520px] block object-cover object-center"
-              />
-              
-              <div className={`hidden sm:block absolute left-[160px] z-30 w-80 md:w-96 lg:w-[420px] ${
-                  banner.id === 2 ? 'top-[72%]' : 'top-[67%]'
-                }`}>
-                  {renderSearchBar()}
-                </div>
-                </div>
-                        ))}
-                      </div>
-
-        {slideCount > 1 && (
-          <>
-            <div className="absolute bottom-4 sm:bottom-10 md:bottom-12 left-3 sm:left-10 lg:left-14 z-20 pointer-events-none hidden sm:block">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-                className="w-7 h-7 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-md border border-solid border-white/40 text-white flex items-center justify-center opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-black/60 active:scale-90 cursor-pointer shadow-lg pointer-events-auto"
-                aria-label="Previous Slide"
-              >
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
-              </button>
-            </div>
-
-            <div className="absolute bottom-4 sm:bottom-10 md:bottom-12 right-3 sm:right-10 lg:right-14 z-20 pointer-events-none hidden sm:block">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); handleNext(); }}
-                className="w-7 h-7 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-md border border-solid border-white/40 text-white flex items-center justify-center opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-black/60 active:scale-90 cursor-pointer shadow-lg pointer-events-auto"
-                aria-label="Next Slide"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
-              </button>
-            </div>
-          </>
-        )}
-
-        {slideCount > 1 && (
-          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 sm:gap-2">
-            {displayBanners.map((banner, index) => (
-              <button
-                key={banner.id}
-                type="button"
-                aria-label={`Go to banner ${index + 1}`}
-                onClick={() => goToSlide(index)}
-                className="h-1.5 sm:h-2 rounded-full transition-all duration-300 border-none cursor-pointer shadow-sm"
-                style={{
-                  width: index === activeIndex || (index === 0 && activeIndex === slideCount) ? '24px' : '6px',
-                  backgroundColor: index === activeIndex || (index === 0 && activeIndex === slideCount) ? '#ffffff' : 'rgba(255,255,255,0.4)'
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Mobile View အတွက် Search Bar */}
-      {isMobile && (
-        <div className="block sm:hidden mt-4 px-4 relative z-40">
-          {renderSearchBar()}
+      {bannerLoaded && slideCount === 0 && (
+        <div className="w-full h-36 sm:h-80 bg-gradient-to-r from-slate-900 to-slate-800 flex items-center p-6 sm:p-10">
+          <h1 className="text-sm sm:text-xl text-white font-bold">Banner data is currently unavailable.</h1>
         </div>
       )}
-    </section>
-  );
+
+      {/* Carousel Track */}
+      <div
+        className="flex flex-row w-full overflow-visible"
+        style={{ 
+          transform: `translateX(-${activeIndex * 100}%)`,
+          transition: isTransitioning ? 'transform 1200ms cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
+        }}
+      >
+        {extendedBanners.map((banner, index) => (
+  <div key={`${banner.id}-${index}`} className="min-w-full w-full shrink-0 relative overflow-visible block">
+    {/* Banner Image */}
+    <img
+      src={banner.image_url}
+      alt=""
+      className="w-full h-auto min-h-[180px] sm:min-h-[440px] lg:min-h-[520px] block object-cover object-center"
+    />
+    
+    {/* 🌟 Index အလိုက် သီးသန့် Position ခွဲခြင်း (Banner Data ID ထပ်နေလည်း အလုပ်လုပ်ပါမည်) 🌟 */}
+    <div 
+      style={{
+        top: (() => {
+          // extendedBanners ၏ အစဉ်အလိုက် index ဖြင့် စစ်ဆေးခြင်း
+          switch (index % slideCount) {
+            case 0:
+              return '60%';  // Slide 1 (Banner 1) မူလ အနီကွက်နေရာ
+            case 1:
+              return '70%';  // Slide 2 (Banner 2) အောက်ဘက်သို့ ရွှေ့မည့်နေရာ
+            default:
+              return '60%';  // အခြား Slide များ
+          }
+        })()
+      }}
+      className="hidden sm:block absolute left-[110px] -translate-y-1/2 z-30 w-80 md:w-96 lg:w-[420px]"
+    >
+      {renderSearchBar()}
+    </div>
+  </div> 
+))}
+      </div>
+
+      {/* 🌟 ဘယ်/ညာ Hover Navigation Buttons 🌟 */}
+      {slideCount > 1 && (
+        <>
+          {/* ဘယ်ဘက် ခလုတ် */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-3 sm:left-6 lg:left-8 z-40 pointer-events-none hidden sm:block">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-black/50 backdrop-blur-md border border-solid border-white/40 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-black/80 active:scale-95 cursor-pointer shadow-xl pointer-events-auto"
+              aria-label="Previous Slide"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* ညာဘက် ခလုတ် */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-3 sm:right-6 lg:right-8 z-40 pointer-events-none hidden sm:block">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-black/50 backdrop-blur-md border border-solid border-white/40 text-white flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-black/80 active:scale-95 cursor-pointer shadow-xl pointer-events-auto"
+              aria-label="Next Slide"
+            >
+              <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 text-white stroke-[2.5]" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Slide Indicator Dots */}
+      {slideCount > 1 && (
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2">
+          {displayBanners.map((banner, index) => (
+            <button
+              key={banner.id}
+              type="button"
+              aria-label={`Go to banner ${index + 1}`}
+              onClick={() => goToSlide(index)}
+              className="h-1.5 sm:h-2 rounded-full transition-all duration-300 border-none cursor-pointer shadow-sm"
+              style={{
+                width: index === activeIndex || (index === 0 && activeIndex === slideCount) ? '24px' : '6px',
+                backgroundColor: index === activeIndex || (index === 0 && activeIndex === slideCount) ? '#ffffff' : 'rgba(255,255,255,0.4)'
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Mobile View အတွက် Search Bar */}
+    {isMobile && (
+      <div className="block sm:hidden mt-4 px-4 relative z-40">
+        {renderSearchBar()}
+      </div>
+    )}
+  </section>
+);
 }

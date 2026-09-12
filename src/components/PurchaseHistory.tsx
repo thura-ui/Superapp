@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Clock3, CheckCircle2, AlertCircle, CreditCard, Calendar, ArrowLeft } from 'lucide-react';
+import { Clock3, CheckCircle2, AlertCircle, CreditCard, Calendar, ArrowLeft, ShoppingBag } from 'lucide-react';
 import OrderDetail from './OrderDetail'; 
 import { useTranslation } from 'react-i18next';
 
@@ -42,6 +42,7 @@ interface ApiMeta {
 
 interface PurchaseHistoryProps {
   onClose: () => void;
+  onBackToAccount?: () => void;
   onHome?: () => void;
   onData?: () => void;
   onHelp?: () => void;
@@ -49,7 +50,7 @@ interface PurchaseHistoryProps {
 
 const PRODUCTS_API_BASE = import.meta.env.VITE_PRODUCTS_API_BASE_URL;
 
-export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHistoryProps) {
+export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHelp }: PurchaseHistoryProps) {
   const { t } = useTranslation();
 
   const [orders, setOrders] = useState<ApiOrder[]>([]);
@@ -128,6 +129,14 @@ export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHis
     }
   };
 
+  const handleBackToAccount = () => {
+    if (onBackToAccount) {
+      onBackToAccount();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   if (selectedOrderNumber) {
     return (
       <OrderDetail
@@ -156,7 +165,7 @@ export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHis
           {/* Back to Account Button */}
           <div className="flex items-center justify-between mb-4">
             <button
-              onClick={onClose || onHome}
+              onClick={handleBackToAccount}
               className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-xs cursor-pointer font-['Poppins'] active:scale-95"
             >
               <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />
@@ -191,7 +200,6 @@ export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHis
               
               {/* 🖥️ WEB VIEW */}
               <div className="hidden md:block bg-white border border-slate-100 rounded-[24px] shadow-[0_12px_30px_rgba(15,23,42,0.02)] overflow-hidden font-['Poppins'] relative">
-                {/* 🔴 Desktop Scroll Wrapper & Hide Scrollbar 🔴 */}
                 <div className="w-full max-h-[600px] overflow-y-auto overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   <table className="w-full min-w-[900px] border-collapse text-left font-['Poppins'] relative">
                     <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm shadow-xs border-b border-slate-100">
@@ -253,7 +261,6 @@ export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHis
               </div>
 
               {/* 📱 MOBILE VIEW */}
-              {/* 🔴 Mobile တွင် 5 ခုခန့်သာ ပေါ်ရန် max-h-[75vh] နှင့် Scrollbar အစင်းဖျောက်ထားပါသည် 🔴 */}
               <div className="block md:hidden space-y-3 font-['Poppins'] max-h-[75vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-4">
                 {orders.map((order) => (
                   <div 
@@ -349,14 +356,12 @@ export default function PurchaseHistory({ onClose, onHome, onHelp }: PurchaseHis
               )}
             </div>
           ) : (
+            /* 🔴 Empty State Area (ShoppingBag Icon ပြောင်းလဲထားသည်) 🔴 */
             <div className="bg-white rounded-[24px] sm:rounded-[32px] p-8 sm:p-16 border border-slate-100 shadow-xs text-center max-w-md mx-auto font-['Poppins']">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 sm:mb-6 p-2.5 sm:p-3">
-                <img 
-                  src="/History-icon01.webp" 
-                  alt="No Orders Icon" 
-                  className="w-full h-full object-contain opacity-60"
-                />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center justify-center mb-4 sm:mb-6 p-3 shadow-xs">
+                <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 opacity-80" />
               </div>
+
               <h3 className="text-sm sm:text-lg font-bold text-slate-900 mb-1.5 sm:mb-2 tracking-tight font-['Poppins']">{t('noOrdersFound')}</h3>
               <p className="text-slate-500 text-xs font-semibold mb-5 sm:mb-6 leading-relaxed max-w-[240px] mx-auto font-['Poppins']">
                 {t('noOrdersDesc')}

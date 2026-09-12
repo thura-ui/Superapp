@@ -143,24 +143,10 @@
 .carousel-search-container {
   position: absolute;
   /* 🌟 အစ်ကိုပြထားသော စာသားအောက် အနီကွက်နေရာသို့ ကွက်တိရောက်စေရန် */
-  top: 48%; 
+  marginTop: 48%; 
   left: 0;
   width: 100%;
   z-index: 40;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ==========================================
-   Carousel Search Bar & Dropdown Position Fix
-   ========================================== */
-.carousel-search-container {
-  position: absolute;
-  /* 🌟 အစ်ကိုပြထားသော စာသားအောက် အနီကွက်နေရာသို့ ကွက်တိရောက်စေရန် */
-  top: 50%; 
-  left: 0;
-  width: 100%;
-  z-index: 50; /* Dropdown ကော Search Bar ပါ အပေါ်စီးကပေါ်ရန် */
   display: flex;
   flex-direction: column;
 }

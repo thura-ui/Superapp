@@ -338,7 +338,6 @@ function App() {
     return <LoadingPage />;
   }
 
-  // 🌟 navTab တွက်ချက်မှုတွင် plan-details ပါဝင်အောင် ပြင်ထားပါသည် 🌟
   const navTab =
     currentScreen === 'home' ? 'home' :
     (currentScreen === 'country-selection' || currentScreen === 'plan-details') ? 'plan' :
@@ -520,8 +519,15 @@ function App() {
             <MyData onClose={goHome} onHome={goHome} />
           )}
 
+          {/* 🔴 ပြင်ဆင်ထားသည့် နေရာ (Back to Account နှိပ်ပါက AccountDetails သို့ တိုက်ရိုက်ရောက်ပါမည်) 🔴 */}
           {currentScreen === 'my-orders' && (
-            <PurchaseHistory onClose={goHome} onHome={goHome} onData={goToMyData} onHelp={goHelpCenter} />
+            <PurchaseHistory 
+              onClose={() => setCurrentScreen('account-details')} 
+              onBackToAccount={() => setCurrentScreen('account-details')}
+              onHome={goHome} 
+              onData={goToMyData} 
+              onHelp={goHelpCenter} 
+            />
           )}
 
           {currentScreen === 'partner' && <PartnerPage />}
