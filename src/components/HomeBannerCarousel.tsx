@@ -296,7 +296,7 @@ export default function HomeBannerCarousel({ onExplorePlans, onSelectCountry }: 
           // extendedBanners ၏ အစဉ်အလိုက် index ဖြင့် စစ်ဆေးခြင်း
           switch (index % slideCount) {
             case 0:
-              return '60%';  // Slide 1 (Banner 1) မူလ အနီကွက်နေရာ
+              return '70%';  // Slide 1 (Banner 1) မူလ အနီကွက်နေရာ
             case 1:
               return '70%';  // Slide 2 (Banner 2) အောက်ဘက်သို့ ရွှေ့မည့်နေရာ
             default:
