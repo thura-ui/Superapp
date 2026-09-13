@@ -111,8 +111,9 @@ export default function AccountAuth({
     if (isForgotPassword) {
       setLoading(true);
       try {
-        const data = await forgotPasswordApi(trimmedEmail);
-        showAlert(data?.message || 'If an account exists with this email, a password reset link has been sent.');
+        await forgotPasswordApi(trimmedEmail);
+        // 🔴 [UPDATED]: CustomAlertHost ရှိ check-email alert အား ခေါ်ယူပြသခြင်း
+        showAlert('check-email');
         setIsForgotPassword(false);
       } catch (err: any) {
         setError(err.message || 'Failed to request password reset.');

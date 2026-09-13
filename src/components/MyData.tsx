@@ -14,8 +14,8 @@ interface EsimStatusData {
   usedData: number;
   totalData: number;
   isUnlimited: boolean;
-  isDayPass: boolean; // 💡 Daypass အတွက် Flag
-  dailyLimitStr: string; // 💡 Daypass ၏ Daily Limit (ဥပမာ "1GB/Day")
+  isDayPass: boolean;
+  dailyLimitStr: string;
   days: number;
   expiry: string;
   coverage: string;
@@ -227,7 +227,6 @@ export default function MyData({ onHome }: MyDataProps) {
     const sku = (plan.sku_name || '').toLowerCase();
     const planTypeLabel = (plan.plan_type_label || '').toLowerCase();
 
-    // 💡 Day Pass ဟုတ်မဟုတ် စစ်ဆေးခြင်း ("plan_type_label": "Daily Data" ပါ စစ်ဆေးပါသည်)
     const isDayPass = (planTypeLabel === "daily data" || plan.plan_type_code === "1") && (
       label.includes('day pass') || 
       label.includes('daypass') || 
@@ -235,14 +234,12 @@ export default function MyData({ onHome }: MyDataProps) {
       sku.includes('daypass')
     );
 
-    // 💡 Unlimited Plan စစ်ဆေးခြင်း
     const isUnlimitedPlan = !isDayPass && (
       label.includes('unlimited') || 
       sku.includes('unlimited') ||
       ((planTypeLabel === "daily data" || plan.plan_type_code === "1") && Number(plan.high_flow_size_gb) <= 0)
     );
 
-    // 💡 Daypass အတွက် GB/Day စာသား ထုတ်ယူခြင်း (ဥပမာ 1GB/Day)
     let dailyLimitStr = "1GB/Day";
     if (isDayPass) {
       const match = variationLabelStr.match(/(\d+GB\/Day|\d+MB\/Day)/i) || (plan.sku_name || '').match(/(\d+GB\/day|\d+MB\/day)/i);
@@ -263,8 +260,8 @@ export default function MyData({ onHome }: MyDataProps) {
       usedData: Number(usage?.total_used_gb) || 0,
       totalData: totalGb,
       isUnlimited: isUnlimitedPlan,
-      isDayPass: isDayPass, // 💡 Day Pass ဖြစ်ကြောင်း Flag
-      dailyLimitStr: dailyLimitStr, // 💡 Day Pass ပြသရန် စာသား
+      isDayPass: isDayPass,
+      dailyLimitStr: dailyLimitStr,
       days: displayDays,
       expiry: computedExpiry,
       coverage: coverageNames,
@@ -538,8 +535,8 @@ export default function MyData({ onHome }: MyDataProps) {
         </div>
       )}
 
-      {/* Logged in Details or Detail Mode Header */}
-      {isLoggedInUser && viewMode === 'detail' && (
+      {/* 🔴 Logged in Details or Detail Mode Header (Logged Out အခြေအနေတွင်ပါ Back Button ပေါ်စေရန် ပြင်ထားပါသည်) 🔴 */}
+      {viewMode === 'detail' && (
         <div className="flex items-center gap-3 border-b border-slate-200/60 pb-4 mb-6">
           <button 
             onClick={() => {
@@ -548,7 +545,7 @@ export default function MyData({ onHome }: MyDataProps) {
               setSelectedIccid('');
             }}
             className="p-2 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm cursor-pointer font-['Poppins']"
-            title="Back to Cards List"
+            title="Back to Search"
           >
             <ArrowLeft className="w-4 h-4 text-slate-700" />
           </button>
@@ -726,7 +723,6 @@ export default function MyData({ onHome }: MyDataProps) {
               </div>
               <div className="text-center">
                 <p className="text-[10px] sm:text-[11px] uppercase text-slate-400 font-['Poppins']">{t('totalData')}</p>
-                {/* 💡 Total Data ပြသမှု - Unlimited / Daypass (1GB/Day) / Fixed (10 GB) */}
                 <p className="text-white font-semibold mt-0.5 font-['Poppins']">
                   {fetchedData.isUnlimited 
                     ? "Unlimited" 

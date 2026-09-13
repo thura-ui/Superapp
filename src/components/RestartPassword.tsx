@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { resetPasswordApi } from '../lib/authApi';
-import { showAlert } from '../lib/customAlert'; // 🌟 [IMPORTED]: ပရောဂျက်တွင်းရှိ Custom Alert စနစ်အား ချိတ်ဆက်ခြင်း
+import { showAlert } from '../lib/customAlert';
 
 interface RestartPasswordProps {
   onGoToSignIn: () => void;
@@ -12,7 +12,7 @@ interface RestartPasswordProps {
 export default function RestartPassword({ onGoToSignIn, onBack }: RestartPasswordProps) {
   const [resetToken, setResetToken] = useState('');
   const [resetEmail, setResetEmail] = useState('');
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -52,12 +52,10 @@ export default function RestartPassword({ onGoToSignIn, onBack }: RestartPasswor
         password_confirmation: confirmPassword
       });
 
-      // URL Parameters များကို ကြိုတင်ရှင်းလင်းပစ်ခြင်း
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // 🚀 [FIXED]: System Box ကြီးအား ဖယ်ရှားပြီး Custom UI Pop-up မြင်ရစေရန် တိုက်ရိုက်ချိတ်ဆက်ခြင်း
-      showAlert("Your Password is Complete Change, Go To Sign In", () => {
-        // 🟢 Pop-up မှ OK ခလုတ်အား နှိပ်လိုက်သည့်အခါမှ Login View သို့ သွားစေခြင်း
+      // 🔴 CustomAlertHost ရှိ 'restart-password-success' Payload Type အား တိုက်ရိုက် ချိတ်ဆက်ထားသည်
+      showAlert('restart-password-success', () => {
         onGoToSignIn();
       });
 
@@ -69,14 +67,14 @@ export default function RestartPassword({ onGoToSignIn, onBack }: RestartPasswor
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-[linear-gradient(180deg,_#ffffff_0%,_#f4fbfb_100%)] pb-20 relative overflow-hidden font-['Poppins']">
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-cyan-400/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute top-[30%] -right-[15%] w-[50%] h-[50%] bg-teal-400/10 rounded-full blur-[100px] animate-pulse" />
       </div>
 
-      <div className="relative max-w-md mx-auto px-4 pt-10 sm:pt-14">
+      <div className="relative max-w-md mx-auto px-4 pt-12 sm:pt-20">
         <div className="rounded-[36px] bg-white/75 backdrop-blur-2xl border border-white/90 shadow-[0_24px_70px_rgba(15,23,42,0.12)] overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-slate-200/70">
             <button type="button" onClick={onBack} className="p-2 bg-white hover:bg-slate-50 rounded-2xl transition-all border border-slate-200 shadow-sm cursor-pointer">
@@ -126,11 +124,14 @@ export default function RestartPassword({ onGoToSignIn, onBack }: RestartPasswor
                 />
               </div>
 
-              {/* Submit CTA */}
-              <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full relative overflow-hidden py-5 rounded-[28px] shadow-2xl group/btn disabled:opacity-40 cursor-pointer border-none">
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-cyan-600 opacity-90 group-hover/btn:opacity-100" />
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-md" />
-                <span className="relative z-10 text-white font-black text-lg tracking-[0.2em] uppercase">
+              <motion.button 
+                whileTap={{ scale: loading ? 1 : 0.98 }} 
+                type="submit" 
+                disabled={loading} 
+                className="w-full relative overflow-hidden py-4 rounded-2xl sm:rounded-3xl shadow-[0_8px_25px_rgba(37,99,235,0.35)] group/btn disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none active:scale-95 transition-all"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 opacity-95 group-hover/btn:opacity-100 transition-opacity" />
+                <span className="relative z-10 text-white font-extrabold text-base tracking-[0.15em] uppercase">
                   {loading ? 'Processing...' : 'Reset Password'}
                 </span>
               </motion.button>
@@ -139,5 +140,5 @@ export default function RestartPassword({ onGoToSignIn, onBack }: RestartPasswor
         </div>
       </div>
     </div>
-  );
+  ); 
 }

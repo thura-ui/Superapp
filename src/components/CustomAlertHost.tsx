@@ -86,6 +86,20 @@ export default function CustomAlertHost() {
         return withDefaults('Success', 'Registration Successful! Please sign in.', [
           { text: 'OK', className: 'alert-btn-primary', callback: onConfirm },
         ]);
+      
+      /* 🔴 [ADDED]: Restart Password ဖြင့် စကားဝှက် အောင်မြင်စွာ ပြောင်းလဲပြီးပါက ပြသရန် 🔴 */
+      case 'restart-password-success':
+        return withDefaults('Success', 'Your Restart Password is Success', [
+          { text: 'OK', className: 'alert-btn-primary', callback: onConfirm },
+        ]);
+
+      /* 🔴 [ADDED]: Forgot Password မှ Email ပို့ပြီးပါက ပြသရန် 🔴 */
+      case 'forgot-password-success':
+      case 'check-email':
+        return withDefaults('Check Your Email', 'Please check your email. We have sent a password reset link.', [
+          { text: 'OK', className: 'alert-btn-primary', callback: onConfirm },
+        ]);
+
       case 'order-success':
         if (options?.onCancel) {
           return withDefaults('Order Success', 'Your order was successful.', [
@@ -113,7 +127,6 @@ export default function CustomAlertHost() {
   }, [payload]);
 
   return (
-    /* 🔴 mobile-typography-fix class ကို အပြင်ဘက်ဆုံး overlay တွင် ထည့်သွင်းပေးထားပါသည် 🔴 */
     <div
       id="customAlertOverlay"
       className={`custom-alert-overlay mobile-typography-fix ${isActive ? 'active' : ''}`}

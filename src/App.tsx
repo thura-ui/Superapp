@@ -44,7 +44,7 @@ function App() {
   const [langKey, setLangKey] = useState<string>(i18n.language || 'en');
 
   const [isLoading, setIsLoading] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history' | 'privacy-policy' | 'terms-conditions'>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history' | 'privacy-policy' | 'terms-conditions'>('restart-password');
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [autoOpenCheckout, setAutoOpenCheckout] = useState(false);
   
@@ -360,8 +360,8 @@ function App() {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         
-        {/* Navigation Bar */}
-        {currentScreen !== 'cart' && (
+        {/* Navigation Bar - Cart ရော Restart Password ရောက်ချိန်တွင်ပါ TopNavigation ကို ဖြုတ်ထားပါသည် */}
+        {currentScreen !== 'cart' && currentScreen !== 'restart-password' && (
           <TopNavigation
             activeTab={navTab}
             isLoggedIn={isLoggedIn}
@@ -519,7 +519,6 @@ function App() {
             <MyData onClose={goHome} onHome={goHome} />
           )}
 
-          {/* 🔴 ပြင်ဆင်ထားသည့် နေရာ (Back to Account နှိပ်ပါက AccountDetails သို့ တိုက်ရိုက်ရောက်ပါမည်) 🔴 */}
           {currentScreen === 'my-orders' && (
             <PurchaseHistory 
               onClose={() => setCurrentScreen('account-details')} 
@@ -546,8 +545,8 @@ function App() {
           />
         </div>
 
-        {/* Footer */}
-        {currentScreen !== 'cart' && (
+        {/* Footer - Cart ရော Restart Password ရောက်ချိန်တွင်ပါ Footer ကို ဖြုတ်ထားပါသည် */}
+        {currentScreen !== 'cart' && currentScreen !== 'restart-password' && (
           <div className="hidden md:block">
             <Footer
               activeScreen={currentScreen} 
