@@ -44,7 +44,7 @@ function App() {
   const [langKey, setLangKey] = useState<string>(i18n.language || 'en');
 
   const [isLoading, setIsLoading] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history' | 'privacy-policy' | 'terms-conditions'>('restart-password');
+  const [currentScreen, setCurrentScreen] = useState<Screen | 'restart-password' | 'spark-history' | 'privacy-policy' | 'terms-conditions'>('home');
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [autoOpenCheckout, setAutoOpenCheckout] = useState(false);
   
