@@ -158,7 +158,6 @@ export default function OrderDetail({
     }
   };
 
-  // 🔴 Description စာသားများ ပျက်မနေစေဘဲ စာကြောင်းအသစ် လှပစွာ ခုန်ပေးမည့် Helper Function
   const formatDescriptionHtml = (rawHtml?: string) => {
     if (!rawHtml) return '';
     return rawHtml
@@ -190,7 +189,6 @@ export default function OrderDetail({
             <span>{t('backToOrders', 'Back to Orders')}</span>
           </button>
 
-          {/* 🔴 Red Border အကွက် ဖြုတ်ပြီး Header စာသားကို သပ်ရပ်အောင် ပြင်ဆင်ထားပါသည် */}
           <span className="text-xs sm:text-sm mt-1 font-bold text-slate-900 uppercase tracking-wider font-['Poppins'] px-3 py-1.5 bg-slate-100/80 rounded-lg">
             {t('orderDetail', 'Order Detail')}
           </span>
@@ -341,7 +339,6 @@ export default function OrderDetail({
 
                     </div>
 
-                    {/* 🔴 Coverage & Details စာသားများ ပျက်မနေစေရန် ပြင်ထားပါသည် */}
                     {variation?.description && (
                       <div className="text-[11px] sm:text-sm text-slate-700 leading-relaxed bg-slate-50/50 p-3 sm:p-4 rounded-xl border border-slate-100">
                         <p className="font-semibold text-slate-400 uppercase tracking-wider text-[10px] sm:text-xs mb-1.5">{t('coverageAndDetails', 'Coverage & Details')}</p>
@@ -469,7 +466,8 @@ export default function OrderDetail({
                   <ShieldCheck className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold">{t('needHelpInstalling', 'Need Help Installing Your eSIM?')}</h4>
+                  {/* 🔴 [UPDATED]: text-white သို့ အဖြူရောင်စစ်စစ် ပြောင်းလဲထားပါသည် */}
+                  <h4 className="text-xs sm:text-sm font-bold text-white">{t('needHelpInstalling', 'Need Help Installing Your eSIM?')}</h4>
                   <p className="text-[11px] sm:text-xs text-blue-200 font-medium mt-0.5">{t('needHelpInstallingDesc', 'Contact our 24/7 roaming support team for guidance.')}</p>
                 </div>
               </div>

@@ -204,12 +204,12 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
                   <table className="w-full min-w-[900px] border-collapse text-left font-['Poppins'] relative">
                     <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm shadow-xs border-b border-slate-100">
                       <tr>
-                        <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('orderNumber')}</th>
-                        <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('product', 'Product')}</th>
-                        <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('paymentMethod')}</th>
-                        <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('placedDate')}</th>
-                        <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('status')}</th>
-                        <th className="p-4 pr-6 text-right text-xs font-semibold text-slate-400 uppercase tracking-widest font-['Poppins']">{t('totalValuation')}</th>
+                        <th className="p-4 text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('orderNumber')}</th>
+                        <th className="p-4 text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('product', 'Product')}</th>
+                        <th className="p-4 text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('paymentMethod')}</th>
+                        <th className="p-4 text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('placedDate')}</th>
+                        <th className="p-4 text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('status')}</th>
+                        <th className="p-4 pr-6 text-right text-xs font-extrabold text-slate-900 uppercase tracking-widest font-['Poppins']">{t('totalValuation')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 bg-white">
@@ -270,7 +270,7 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
                   >
                     <div className="flex items-start justify-between border-b border-blue-50 pb-2.5">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider font-['Poppins']">{t('orderNo')}</span>
+                        <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-wider font-['Poppins']">{t('orderNo')}</span>
                         <span className="text-xs font-bold text-blue-600 font-mono tracking-wide mt-0.5">{order.order_number}</span>
                         
                         {order.items && order.items.length > 0 && (
@@ -296,7 +296,7 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
                           <CreditCard className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider font-['Poppins']">{t('payment')}</span>
+                          <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-wider font-['Poppins']">{t('payment')}</span>
                           <span className="font-bold text-slate-900 uppercase truncate text-xs font-['Poppins']">{order.payment_method}</span>
                         </div>
                       </div>
@@ -306,14 +306,14 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
                           <Calendar className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider font-['Poppins']">{t('date')}</span>
+                          <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-wider font-['Poppins']">{t('date')}</span>
                           <span className="font-semibold text-slate-900 truncate text-xs font-['Poppins']">{formatPlacedDate(order.placed_at)}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-blue-50/40 rounded-xl p-2.5 flex items-center justify-between border border-blue-100/60 mt-1">
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider font-['Poppins']">{t('totalAmount')}</span>
+                      <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-wider font-['Poppins']">{t('totalAmount')}</span>
                       <span className="text-xs font-bold text-blue-600 font-['Poppins']">
                         {order.total > 0 ? `${order.total.toLocaleString()} MMK` : '0 MMK'}
                       </span>
@@ -356,7 +356,7 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
               )}
             </div>
           ) : (
-            /* 🔴 Empty State Area (ShoppingBag Icon ပြောင်းလဲထားသည်) 🔴 */
+            /* Empty State Area */
             <div className="bg-white rounded-[24px] sm:rounded-[32px] p-8 sm:p-16 border border-slate-100 shadow-xs text-center max-w-md mx-auto font-['Poppins']">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center justify-center mb-4 sm:mb-6 p-3 shadow-xs">
                 <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500 opacity-80" />
@@ -387,13 +387,14 @@ export default function PurchaseHistory({ onClose, onBackToAccount, onHome, onHe
                     <Clock3 className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight font-['Poppins']">{t('needTechSupport')}</p>
-                    <p className="text-[10px] sm:text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5 font-['Poppins']">{t('helpCenterDesc')}</p>
+                    <p className="text-xs font-semibold tracking-wide text-slate-900 font-['Poppins']">{t('needTechSupport')}</p>
+                    {/* 🔴 [UPDATED]: Sub-text အား Top Nav စတိုင်လ် (text-[11px] font-semibold tracking-wide text-slate-500) အဖြစ် ညှိထားသည် 🔴 */}
+                    <p className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase mt-0.5 font-['Poppins']">{t('helpCenterDesc')}</p>
                   </div>
                 </div>
                 <button 
                   onClick={onHelp}
-                  className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-slate-800 text-xs font-bold uppercase tracking-wider cursor-pointer bg-white text-center font-['Poppins'] active:scale-95"
+                  className="w-full sm:w-auto px-4 py-2 sm:px-5 sm:py-2 rounded-full border border-slate-200/80 hover:bg-slate-50 transition-all text-slate-900 text-xs font-semibold tracking-wide cursor-pointer bg-white text-center font-['Poppins'] active:scale-95 shadow-xs"
                 >
                   {t('contactSupportAgent')}
                 </button>
