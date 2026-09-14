@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, Minus, Plus, X, CreditCard, Phone, Loader2, QrCode, Copy, CheckCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react'; 
 import {
@@ -52,7 +52,6 @@ const normalizeCart = (payload: any): CartData => {
     const rawName = String(item?.name ?? item?.product_name ?? item?.title ?? 'eSIM Plan');
     const daysCount = toNumber(item?.days ?? item?.validity_days ?? item?.duration_days ?? item?.variation?.days, 0);
 
-    // 🔴 plan_type ကို API ရဲ့ နေရာစုံမှ ရှာယူခြင်း 🔴
     const rawPlanType = String(
       item?.plan_type ?? 
       item?.variation?.plan_type ?? 
@@ -61,12 +60,10 @@ const normalizeCart = (payload: any): CartData => {
       ''
     ).toLowerCase().trim();
 
-    // LocalStorage မှ တိုက်ရိုက်ယူထားသော Label (Fallback)
     const savedPackageLabel = localStorage.getItem('selected_package_label');
 
     let packageTypeLabel = '';
 
-    // 🔴 plan_type အပေါ်မူတည်၍ Label ခွဲခြားခြင်း 🔴
     if (rawPlanType === 'daypass' || rawPlanType === 'day_pass' || rawPlanType === 'daily') {
       packageTypeLabel = daysCount > 0 ? `DAYPASS (${daysCount} DAYS)` : 'DAYPASS';
     } else if (rawPlanType === 'unlimited') {
@@ -104,7 +101,6 @@ export default function CartPage({
   onGoProduct,
   onGoHome,
 }: CartProps) {
-  // ─── States ───
   const [cart, setCart] = useState<CartData>({ items: [], subtotal: 0 });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -119,7 +115,6 @@ export default function CartPage({
   const [paymentResult, setPaymentResult] = useState<CheckoutResponse | null>(null);
   const [waitingOrderNumber, setWaitingOrderNumber] = useState<string | null>(null);
   
-  // MMQR Data State
   const [qrStringData, setQrStringData] = useState<string | null>(null);
   const [copiedQr, setCopiedQr] = useState(false);
 
@@ -251,7 +246,7 @@ export default function CartPage({
   }
 
   return (
-    <div className="mobile-typography-fix fixed inset-0 z-40 flex items-center justify-center bg-slate-100/60 backdrop-blur-sm p-3 sm:p-4 overflow-hidden selection:bg-blue-500/10 pt-12 pb-24 sm:py-6">
+    <div className="mobile-typography-fix fixed inset-0 z-40 flex items-center justify-center bg-slate-100/60 backdrop-blur-sm p-3 sm:p-4 overflow-hidden selection:bg-blue-500/10 pt-12 pb-24 sm:py-6 font-['Poppins']">
       <div className="w-full max-w-2xl bg-white text-slate-900 rounded-[28px] sm:rounded-[32px] p-3.5 sm:p-6 border border-slate-200 shadow-2xl space-y-2.5 sm:space-y-4">
         
         {/* Header Block */}
@@ -273,19 +268,15 @@ export default function CartPage({
             {cart.items.map((item) => (
               <div key={item.id} className="bg-slate-50/60 p-2.5 sm:p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  {/* Name */}
                   <p className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight truncate">{item.name}</p>
                   
-                  {/* 🔴 plan_type မှ ခွဲထုတ်ထားသော Package Label (DAYPASS / FIXED BUNDLE / UNLIMITED) 🔴 */}
                   <p className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
                     {item.packageTypeLabel}
                   </p>
                   
-                  {/* Price Info */}
                   <p className="text-blue-600 font-bold text-xs">{item.price.toLocaleString()} MMK</p>
                 </div>
 
-                {/* Quantity Controller Box */}
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     disabled={busy || item.quantity <= 1}
@@ -319,7 +310,6 @@ export default function CartPage({
             </h3>
           </div>
 
-          {/* Remittance Grid Options */}
           <div className="space-y-1">
             <label className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide">Select Payment Method</label>
             {loadingMethods && <div className="text-slate-400 text-xs py-1">Loading payment …</div>}
@@ -351,7 +341,6 @@ export default function CartPage({
             </div>
           </div>
 
-          {/* Customer Phone Input */}
           <div className="space-y-2">
             <div>
               <label className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-0.5">
@@ -373,13 +362,11 @@ export default function CartPage({
             </div>
           )}
 
-          {/* Total Summary Valuation Area */}
           <div className="border-t border-dashed border-slate-200 pt-2 flex justify-between items-baseline">
             <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest">Total Price</span>
             <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">{cart.subtotal.toLocaleString()} MMK</span>
           </div>
 
-          {/* CTA Action Buttons Row */}
           {!paymentResult && (
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
@@ -409,7 +396,6 @@ export default function CartPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm bg-white rounded-[32px] p-5 border border-slate-200 shadow-2xl text-center space-y-4 animate-in zoom-in-95 duration-200">
             
-            {/* ORDER STATUS BANNER BOX */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl py-2.5 px-3 space-y-0.5">
               <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">ORDER STATUS</p>
               <p className="text-xs text-amber-700 font-bold">Waiting For Your Payment</p>
@@ -421,7 +407,6 @@ export default function CartPage({
               </div>
             </div>
 
-            {/* MMQR CODE DISPLAY BLOCK */}
             {qrStringData ? (
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center space-y-3">
                 <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs uppercase tracking-wide">
@@ -438,7 +423,6 @@ export default function CartPage({
                   />
                 </div>
 
-                {/* QR Data Copy Button */}
                 <button
                   type="button"
                   onClick={copyQrDataToClipboard}
@@ -472,32 +456,27 @@ export default function CartPage({
             <div className="border-t border-slate-100 pt-1">
               <PaymentStatusPoller
                 orderNumber={waitingOrderNumber}
-                onSuccess={async () => {
+                onSuccess={() => {
                   setWaitingOrderNumber(null);
                   setPaymentResult(null);
                   setQrStringData(null);
 
-                  const confirmGoBack = await showAlert({
-                    title: "Payment Successful",
-                    message: "သင့်ရဲ့ ငွေပေးချေမှု အောင်မြင်သွားပါပြီ။ Plan စာမျက်နှာသို့ ပြန်သွားမလား?",
-                    type: "success",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes",
-                    cancelButtonText: "No"
-                  });
-
-                  if (confirmGoBack) {
+                  showAlert('confirm-order-success', () => {
                     onGoProduct();
-                  } else {
-                    onGoHome();
-                  }
+                  }, {
+                    onCancel: () => {
+                      onGoHome();
+                    }
+                  });
                 }}
                 
                 onTimeout={() => { 
                   setWaitingOrderNumber(null); 
                   setPaymentResult(null); 
                   setQrStringData(null);
-                  onGoHome(); 
+                  showAlert('timeout', () => {
+                    onGoHome();
+                  }); 
                 }}
                 onCancel={onGoHome}
                 onStatusChange={(status) => {
@@ -506,7 +485,6 @@ export default function CartPage({
               />
             </div>
 
-            {/* Cancel Action Button */}
             <div className="pt-1 border-t border-slate-100">
               <button
                 type="button"
