@@ -34,12 +34,15 @@ const appendAntiCacheParam = (url: string) => {
   return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
 };
 
-// 🔴 Anti-Cache Default Headers Generator
+// 🔴 Anti-Cache & Platform Headers Generator
 const getAntiCacheHeaders = (existingHeaders?: HeadersInit): Headers => {
   const headers = new Headers(existingHeaders);
   headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   headers.set('Pragma', 'no-cache');
   headers.set('Expires', '0');
+  // 🌟 Header ထဲတွင် Platform: APP ပို့ပေးခြင်း
+  headers.set('Platform', 'app');
+  headers.set('X-Platform', 'app');
   return headers;
 };
 
@@ -123,7 +126,15 @@ const normalizeProfile = (payload: unknown): AuthProfile => {
   return { name, email, phone };
 };
 
-// 🔴 Anti-Cache logic များ ထည့်သွင်းထားသော requestJson Function
+// Helper function: Body Object ထဲသို့ platform: "APP" ထည့်ပေးရန်
+const withPlatform = (data: unknown) => {
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return { ...data, platform: 'app' };
+  }
+  return { data, platform: 'app' };
+};
+
+// 🔴 Anti-Cache & Platform logic များ ထည့်သွင်းထားသော requestJson Function
 const requestJson = async (url: string, init?: RequestInit) => {
   const headers = getAntiCacheHeaders(init?.headers);
   const fetchUrl = appendAntiCacheParam(url);
@@ -137,11 +148,12 @@ const requestJson = async (url: string, init?: RequestInit) => {
   return { response, payload };
 };
 
+// 🌟 Register API
 export const register = async (userData: unknown) => {
   const { response, payload } = await requestJson(`${AUTH_API_BASE}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
+    body: JSON.stringify(withPlatform(userData)),
   });
 
   if (!response.ok) {
@@ -151,6 +163,7 @@ export const register = async (userData: unknown) => {
   return payload;
 };
 
+// 🌟 Get Profile API
 export const getProfile = async (): Promise<AuthProfile> => {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) {
@@ -170,6 +183,7 @@ export const getProfile = async (): Promise<AuthProfile> => {
   return profile;
 };
 
+// 🌟 Get Cached Profile Local
 export const getCachedProfile = (): AuthProfile | null => {
   try {
     const raw = localStorage.getItem(AUTH_PROFILE_KEY);
@@ -188,11 +202,12 @@ export const getCachedProfile = (): AuthProfile | null => {
   }
 };
 
+// 🌟 Login API
 export const login = async (credentials: unknown) => {
   const { response, payload } = await requestJson(`${AUTH_API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
+    body: JSON.stringify(withPlatform(credentials)),
   });
 
   if (!response.ok) {
@@ -216,6 +231,7 @@ export const login = async (credentials: unknown) => {
   return { token, profile };
 };
 
+// 🌟 Logout API
 export const logout = async () => {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
@@ -226,6 +242,7 @@ export const logout = async () => {
     await fetch(fetchUrl, {
       method: 'POST',
       headers,
+      body: JSON.stringify({ platform: 'app' }),
     }).catch(() => undefined);
   }
 
@@ -233,6 +250,7 @@ export const logout = async () => {
   localStorage.removeItem(AUTH_PROFILE_KEY);
 };
 
+// 🌟 Get Total Sparks API
 export const getTotalSparks = async () => {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) {
@@ -262,7 +280,7 @@ export const getTotalSparks = async () => {
 
 // 🌟 Edit Profile API (PUT Method)
 export const updateProfile = async (data: { name: string; email: string; phone: string }) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) throw new Error('No auth token found');
 
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/profile`, {
@@ -271,7 +289,7 @@ export const updateProfile = async (data: { name: string; email: string; phone: 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(withPlatform(data)),
   });
 
   if (!response.ok) {
@@ -280,14 +298,14 @@ export const updateProfile = async (data: { name: string; email: string; phone: 
 
   const currentCached = getCachedProfile();
   if (currentCached) {
-    localStorage.setItem('authProfile', JSON.stringify({ ...currentCached, ...data }));
+    localStorage.setItem(AUTH_PROFILE_KEY, JSON.stringify({ ...currentCached, ...data }));
   }
   return payload;
 };
 
 // 🌟 Change Password API (POST Method)
 export const changePasswordApi = async (passwordData: unknown) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (!token) throw new Error('No auth token found');
 
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/change-password`, {
@@ -296,7 +314,7 @@ export const changePasswordApi = async (passwordData: unknown) => {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify(passwordData),
+    body: JSON.stringify(withPlatform(passwordData)),
   });
 
   if (!response.ok) {
@@ -310,7 +328,7 @@ export const forgotPasswordApi = async (email: string) => {
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, platform: 'app' }),
   });
 
   if (!response.ok) {
@@ -324,7 +342,7 @@ export const resetPasswordApi = async (resetData: unknown) => {
   const { response, payload } = await requestJson(`${import.meta.env.VITE_PRODUCTS_API_BASE_URL}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(resetData),
+    body: JSON.stringify(withPlatform(resetData)),
   });
 
   if (!response.ok) {
