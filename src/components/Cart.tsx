@@ -7,6 +7,7 @@ import {
   fetchPaymentMethods,
   submitCheckout,
   cancelOrder,
+  clearCart,
   type PaymentMethod,
   type CheckoutResponse,
 } from '../lib/cartApi';
@@ -168,23 +169,33 @@ export default function CartPage({
     }
   };
 
+  const handleExitCart = async () => {
+    try {
+      await clearCart();
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+    } finally {
+      setCart({ items: [], subtotal: 0 });
+      setWaitingOrderNumber(null);
+      setPaymentResult(null);
+      setQrStringData(null);
+      onGoHome();
+    }
+  };
+
   const handleCancelOrderFlow = async () => {
     if (!waitingOrderNumber) {
-      onGoHome();
+      await handleExitCart();
       return;
     }
 
     setCancellingOrder(true);
     try {
       await cancelOrder(waitingOrderNumber);
-      setWaitingOrderNumber(null);
-      setPaymentResult(null);
-      setQrStringData(null);
-      onGoHome();
     } catch (error) {
       console.error('Failed to execute cancel flow:', error);
-      onGoHome();
     } finally {
+      await handleExitCart();
       setCancellingOrder(false);
     }
   };
@@ -257,7 +268,7 @@ export default function CartPage({
             </h3>
           </div>
           
-          <button onClick={onGoHome} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors shrink-0">
+          <button onClick={() => { void handleExitCart(); }} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors shrink-0">
             <X size={18} />
           </button>
         </div>
@@ -478,7 +489,7 @@ export default function CartPage({
                     onGoHome();
                   }); 
                 }}
-                onCancel={onGoHome}
+                onCancel={() => { void handleCancelOrderFlow(); }}
                 onStatusChange={(status) => {
                   if (status) setCurrentApiStatusText(status.toUpperCase());
                 }}
