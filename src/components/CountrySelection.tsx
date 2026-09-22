@@ -475,7 +475,8 @@ export default function CountrySelection({ onSelectCountry, openAllCountries, on
             (item) => item.name.toLowerCase().includes('global')
           );
 
-          const mappedGlobal = mapProductsToRegions(pureGlobalProducts);
+          const mappedGlobal = mapProductsToRegions(pureGlobalProducts)
+            .sort((a, b) => a.country_count - b.country_count || a.name.localeCompare(b.name));
           setGlobalPackages(mappedGlobal);
           setGlobalMeta(response.meta);
         }
