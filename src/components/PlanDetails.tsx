@@ -301,6 +301,19 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
     }
 
     const priceEntry = selectedEntries[0];
+    const planTypeLabel =
+      priceEntry.plan_type === 'daypass'
+        ? 'DAYPASS'
+        : priceEntry.plan_type === 'unlimited'
+          ? 'UNLIMITED'
+          : 'FIXED BUNDLE';
+    const selectedPackageLabel = [
+      priceEntry.data?.trim(),
+      priceEntry.days > 0 ? `${priceEntry.days} DAYS` : '',
+      planTypeLabel,
+    ].filter(Boolean).join(' - ');
+
+    localStorage.setItem('selected_package_label', selectedPackageLabel);
 
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
