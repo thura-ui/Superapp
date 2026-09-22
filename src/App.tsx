@@ -13,6 +13,7 @@ import EsimCheck from './components/EsimCheck';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsConditions from './components/TermsConditions';
 import { logout } from './lib/authApi';
+import { addToCart } from './lib/cartApi';
 import { fetchPopularProducts } from './lib/productsApi';
 
 import NoEsimSupport from './components/NoEsimSupport';
@@ -58,6 +59,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('authToken'));
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
   const [postAuthScreen, setPostAuthScreen] = useState<Screen | null>(null);
+  const [pendingCheckoutVariationId, setPendingCheckoutVariationId] = useState<number | null>(null);
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [supportPosition, setSupportPosition] = useState<LauncherPosition>({ x: 0, y: 0 });
   const [supportReady, setSupportReady] = useState(false);
@@ -402,7 +404,8 @@ function App() {
               country={selectedCountry}
               planFilterType={selectedPlanType}
               isLoggedIn={isLoggedIn}
-              onRequireLogin={() => {
+              onRequireLogin={(variationId) => {
+                setPendingCheckoutVariationId(variationId);
                 setPostAuthScreen('cart');
                 goAuth('sign-in');
               }}
@@ -479,9 +482,16 @@ function App() {
           {currentScreen === 'auth' && (
             <AccountAuth
               initialMode={authMode}
-              onAuthSuccess={(loggedIn) => {
+              onAuthSuccess={async (loggedIn) => {
                 setIsLoggedIn(loggedIn);
                 if (loggedIn && postAuthScreen) {
+                  if (postAuthScreen === 'cart' && pendingCheckoutVariationId !== null) {
+                    try {
+                      await addToCart(pendingCheckoutVariationId, 1);
+                    } finally {
+                      setPendingCheckoutVariationId(null);
+                    }
+                  }
                   setCurrentScreen(postAuthScreen);
                   setPostAuthScreen(null);
                 } else {
