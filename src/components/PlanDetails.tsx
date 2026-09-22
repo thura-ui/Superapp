@@ -123,6 +123,21 @@ const mapProductVariationsToPricing = (variations: ProductVariation[]): Pricing[
 };
 
 const activeDetailPromisesMap = new Map<string, Promise<any>>();
+const CART_PLAN_DETAILS_KEY = 'cartPlanDetails';
+
+const saveCartPlanDetails = (variationId: number, data: string, days: number, planType: string) => {
+  try {
+    const current = JSON.parse(localStorage.getItem(CART_PLAN_DETAILS_KEY) || '{}');
+    localStorage.setItem(CART_PLAN_DETAILS_KEY, JSON.stringify({
+      ...current,
+      [variationId]: { data, days, planType },
+    }));
+  } catch {
+    localStorage.setItem(CART_PLAN_DETAILS_KEY, JSON.stringify({
+      [variationId]: { data, days, planType },
+    }));
+  }
+};
 
 const cleanImageUrlSlashes = (url: string | undefined): string => {
   if (!url) return '';
@@ -314,6 +329,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
     ].filter(Boolean).join(' - ');
 
     localStorage.setItem('selected_package_label', selectedPackageLabel);
+    saveCartPlanDetails(priceEntry.pricing_id, priceEntry.data, priceEntry.days, priceEntry.plan_type);
 
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
