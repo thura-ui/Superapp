@@ -268,7 +268,7 @@ export default function CartPage({
             </h3>
           </div>
           
-          <button onClick={() => { void handleExitCart(); }} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors shrink-0">
+          <button onClick={() => { void handleCancelOrderFlow(); }} className="p-1 hover:bg-slate-50 rounded-full border-none bg-transparent cursor-pointer text-slate-400 transition-colors shrink-0">
             <X size={18} />
           </button>
         </div>
