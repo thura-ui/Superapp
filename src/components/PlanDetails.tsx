@@ -11,7 +11,7 @@ interface PlanDetailsProps {
   onBack: () => void;
   onHome?: () => void;
   onGoToCart: () => void; 
-  onRequireLogin: () => void; 
+  onRequireLogin: (variationId: number) => void; 
 }
 
 interface Pricing {
@@ -302,7 +302,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
 
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
-      onRequireLogin(); 
+      onRequireLogin(priceEntry.pricing_id); 
       return;
     }
 
