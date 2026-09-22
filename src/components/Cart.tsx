@@ -41,6 +41,24 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const CART_PLAN_DETAILS_KEY = 'cartPlanDetails';
+
+const getStoredPlanDetails = (variationId: number) => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CART_PLAN_DETAILS_KEY) || '{}');
+    const details = stored[String(variationId)];
+    if (!details || typeof details !== 'object') return null;
+
+    return {
+      data: typeof details.data === 'string' ? details.data : '',
+      days: toNumber(details.days, 0),
+      planType: typeof details.planType === 'string' ? details.planType : '',
+    };
+  } catch {
+    return null;
+  }
+};
+
 const normalizeCart = (payload: any): CartData => {
   const rawItems =
     (Array.isArray(payload?.items) && payload.items) ||
@@ -51,21 +69,26 @@ const normalizeCart = (payload: any): CartData => {
 
   const items: CartItem[] = rawItems.map((item: any, index: number) => {
     const rawName = String(item?.name ?? item?.product_name ?? item?.title ?? 'eSIM Plan');
-    const daysCount = toNumber(item?.days ?? item?.validity_days ?? item?.duration_days ?? item?.variation?.days, 0);
+    const variationId = toNumber(item?.variation_id ?? item?.variation?.id ?? item?.id, index + 1);
+    const storedPlanDetails = getStoredPlanDetails(variationId);
+    const apiDaysCount = toNumber(item?.days ?? item?.validity_days ?? item?.duration_days ?? item?.variation?.days, 0);
+    const daysCount = apiDaysCount > 0 ? apiDaysCount : (storedPlanDetails?.days ?? 0);
     const rawDataStr = String(
-      item?.data_plan ??
-      item?.data ??
-      item?.data_amount ??
-      item?.variation?.data_plan ??
-      item?.variation?.data ??
+      item?.data_plan ||
+      item?.data ||
+      item?.data_amount ||
+      item?.variation?.data_plan ||
+      item?.variation?.data ||
+      storedPlanDetails?.data ||
       ''
     ).toUpperCase().trim();
 
     const rawPlanType = String(
-      item?.plan_type ?? 
-      item?.variation?.plan_type ?? 
-      item?.variation_plan_type ?? 
-      item?.type ?? 
+      item?.plan_type || 
+      item?.variation?.plan_type || 
+      item?.variation_plan_type || 
+      item?.type || 
+      storedPlanDetails?.planType ||
       ''
     ).toLowerCase().trim();
 
@@ -97,7 +120,7 @@ const normalizeCart = (payload: any): CartData => {
 
     return {
       id: toNumber(item?.id ?? item?.item_id ?? item?.cart_item_id, index + 1),
-      variation_id: toNumber(item?.variation_id ?? item?.id, index + 1),
+      variation_id: variationId,
       name: rawName,
       price: toNumber(item?.price ?? item?.unit_price ?? item?.effective_price, 0),
       quantity: Math.max(1, toNumber(item?.quantity, 1)),
