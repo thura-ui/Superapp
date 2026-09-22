@@ -300,6 +300,8 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
       return;
     }
 
+    const priceEntry = selectedEntries[0];
+
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
       onRequireLogin(priceEntry.pricing_id); 
@@ -310,7 +312,6 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
     setOrderError(null);
 
     try {
-      const priceEntry = selectedEntries[0];
       await clearCart().catch(() => {});
       await addToCart(priceEntry.pricing_id, 1);
       onGoToCart();
