@@ -81,7 +81,9 @@ const normalizeCart = (payload: any): CartData => {
 
     let packageTypeLabel = '';
 
-    if (rawPlanType === 'daypass' || rawPlanType === 'day_pass' || rawPlanType === 'daily') {
+    if (!rawDataStr && daysCount === 0 && savedPackageLabel) {
+      packageTypeLabel = savedPackageLabel;
+    } else if (rawPlanType === 'daypass' || rawPlanType === 'day_pass' || rawPlanType === 'daily') {
       packageTypeLabel = withPlanDetails('DAYPASS');
     } else if (rawPlanType === 'unlimited') {
       packageTypeLabel = withPlanDetails('UNLIMITED');
