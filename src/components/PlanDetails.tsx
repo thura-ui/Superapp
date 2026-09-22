@@ -160,7 +160,7 @@ export default function PlanDetails({ country, globalPlan, onBack, onHome, onGoT
   }, [country?.id, globalPlan]);
 
   const isRegionOrGlobal = country?.type === 'global' || country?.type === 'regional' || !!globalPlan;
-  const displayName = isRegionOrGlobal && country?.type === 'global' ? 'Global eSIM' : (country?.name || '');
+  const displayName = country?.name || (country?.type === 'global' ? 'Global eSIM' : '');
   const topFlagUrl = apiFlagImage;
 
   const isPopularItem = Boolean(country?.popular);
