@@ -52,6 +52,14 @@ const normalizeCart = (payload: any): CartData => {
   const items: CartItem[] = rawItems.map((item: any, index: number) => {
     const rawName = String(item?.name ?? item?.product_name ?? item?.title ?? 'eSIM Plan');
     const daysCount = toNumber(item?.days ?? item?.validity_days ?? item?.duration_days ?? item?.variation?.days, 0);
+    const rawDataStr = String(
+      item?.data_plan ??
+      item?.data ??
+      item?.data_amount ??
+      item?.variation?.data_plan ??
+      item?.variation?.data ??
+      ''
+    ).toUpperCase().trim();
 
     const rawPlanType = String(
       item?.plan_type ?? 
@@ -63,18 +71,26 @@ const normalizeCart = (payload: any): CartData => {
 
     const savedPackageLabel = localStorage.getItem('selected_package_label');
 
+    const planDetails = [
+      rawDataStr,
+      daysCount > 0 ? `${daysCount} DAYS` : '',
+    ].filter(Boolean).join(' - ');
+
+    const withPlanDetails = (planType: string) =>
+      planDetails ? `${planDetails} - ${planType}` : planType;
+
     let packageTypeLabel = '';
 
     if (rawPlanType === 'daypass' || rawPlanType === 'day_pass' || rawPlanType === 'daily') {
-      packageTypeLabel = daysCount > 0 ? `DAYPASS (${daysCount} DAYS)` : 'DAYPASS';
+      packageTypeLabel = withPlanDetails('DAYPASS');
     } else if (rawPlanType === 'unlimited') {
-      packageTypeLabel = daysCount > 0 ? `UNLIMITED (${daysCount} DAYS)` : 'UNLIMITED';
+      packageTypeLabel = withPlanDetails('UNLIMITED');
     } else if (rawPlanType === 'fixed' || rawPlanType === 'bundle') {
-      packageTypeLabel = daysCount > 0 ? `${daysCount} DAYS FIXED BUNDLE` : 'FIXED BUNDLE';
+      packageTypeLabel = withPlanDetails('FIXED BUNDLE');
     } else if (savedPackageLabel) {
-      packageTypeLabel = savedPackageLabel;
+      packageTypeLabel = withPlanDetails(savedPackageLabel);
     } else {
-      packageTypeLabel = daysCount > 0 ? `${daysCount} DAYS FIXED BUNDLE` : 'FIXED BUNDLE';
+      packageTypeLabel = withPlanDetails('FIXED BUNDLE');
     }
 
     return {
