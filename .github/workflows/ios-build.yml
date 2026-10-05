@@ -35,13 +35,29 @@ jobs:
 
       - name: Archive iOS App
         run: |
-          xcodebuild -workspace ios/App/App.xcworkspace \
-                     -scheme App \
-                     -sdk iphoneos \
-                     -configuration Release \
-                     -archivePath ios/App/build/App.xcarchive \
-                     archive \
-                     CODE_SIGNING_ALLOWED=NO
+          if [ -d ios/App/App.xcworkspace ]; then
+            echo "Building with xcworkspace..."
+            xcodebuild -workspace ios/App/App.xcworkspace \
+                       -scheme App \
+                       -sdk iphoneos \
+                       -configuration Release \
+                       -archivePath ios/App/build/App.xcarchive \
+                       archive \
+                       CODE_SIGNING_ALLOWED=NO
+          elif [ -d ios/App/App.xcodeproj ]; then
+            echo "Building with xcodeproj..."
+            xcodebuild -project ios/App/App.xcodeproj \
+                       -scheme App \
+                       -sdk iphoneos \
+                       -configuration Release \
+                       -archivePath ios/App/build/App.xcarchive \
+                       archive \
+                       CODE_SIGNING_ALLOWED=NO
+          else
+            echo "Error: Neither App.xcworkspace nor App.xcodeproj found!"
+            ls -la ios/App
+            exit 1
+          fi
 
       - name: Create Valid IPA Package
         run: |
