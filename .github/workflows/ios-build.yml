@@ -33,29 +33,25 @@ jobs:
           npx cap add ios || true
           npx cap sync ios
 
-      - name: Build iOS Physical Device (.app)
+      - name: Archive iOS App
         run: |
-          if [ -d ios/App/App.xcworkspace ]; then
-            echo "Using Xcode workspace: ios/App/App.xcworkspace"
-            xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO -derivedDataPath ios/App/build
-          elif [ -d ios/App/App.xcodeproj ]; then
-            echo "Using Xcode project: ios/App/App.xcodeproj"
-            xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO -derivedDataPath ios/App/build
-          else
-            echo "No App.xcworkspace or App.xcodeproj found under ios/App."
-            ls -R ios || true
-            exit 1
-          fi
+          xcodebuild -workspace ios/App/App.xcworkspace \
+                     -scheme App \
+                     -sdk iphoneos \
+                     -configuration Release \
+                     -archivePath ios/App/build/App.xcarchive \
+                     archive \
+                     CODE_SIGNING_ALLOWED=NO
 
-      - name: Package .app to Unsigned .ipa
+      - name: Create Valid IPA Package
         run: |
-          cd ios/App/build/Build/Products/Release-iphoneos
+          cd ios/App/build/App.xcarchive/Products/Applications
           mkdir Payload
-          cp -r App.app Payload/
+          cp -R App.app Payload/
           zip -r App.ipa Payload
 
       - name: Upload .ipa Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-real-device
-          path: ios/App/build/Build/Products/Release-iphoneos/App.ipa
+          path: ios/App/build/App.xcarchive/Products/Applications/App.ipa
