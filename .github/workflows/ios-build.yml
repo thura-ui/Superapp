@@ -33,39 +33,12 @@ jobs:
           npx cap add ios || true
           npx cap sync ios
 
-      - name: Install CocoaPods workspace if needed
-        run: |
-          if ! command -v pod >/dev/null 2>&1; then
-            sudo gem install cocoapods || brew install cocoapods
-          fi
-          if [ -d ios/App ]; then
-            cd ios/App
-          elif [ -d ios ]; then
-            cd ios
-          else
-            echo "ios directory not found"
-            exit 1
-          fi
-
-          if [ -f Podfile ]; then
-            pod install --repo-update
-          else
-            echo "No Podfile found in $(pwd). Capacitor may not have generated native iOS files yet."
-            ls -la
-            exit 1
-          fi
-
-          echo "Generated workspace/project files:"
-          ls -la
-          ls -la *.xcworkspace 2>/dev/null || true
-          ls -la *.xcodeproj 2>/dev/null || true
-
       - name: Build iOS Simulator .app Bundle
         run: |
-          if [ -f ios/App/App.xcworkspace ]; then
+          if [ -d ios/App/App.xcworkspace ]; then
             echo "Using Xcode workspace: ios/App/App.xcworkspace"
             xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Release CODE_SIGNING_ALLOWED=NO -derivedDataPath ios/App/build
-          elif [ -f ios/App/App.xcodeproj ]; then
+          elif [ -d ios/App/App.xcodeproj ]; then
             echo "Using Xcode project: ios/App/App.xcodeproj"
             xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Release CODE_SIGNING_ALLOWED=NO -derivedDataPath ios/App/build
           else
