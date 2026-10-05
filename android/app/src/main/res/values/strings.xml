@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Simless</string>
+    <string name="title_activity_main">Simless</string>
+    <string name="package_name">com.simless_mm.app</string>
+    <string name="custom_url_scheme">com.simless_mm.app</string>
+</resources>
